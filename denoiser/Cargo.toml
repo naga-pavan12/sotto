@@ -1,0 +1,18 @@
+[package]
+name = "sotto_denoiser"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "C-ABI noise-cancellation library wrapping DeepFilterNet3"
+
+[lib]
+name = "sotto_denoiser"
+crate-type = ["staticlib", "rlib"]
+
+[dependencies]
+deep_filter = { git = "https://github.com/Rikorose/DeepFilterNet", tag = "v0.5.6", default-features = false, features = ["tract", "default-model"] }
+ndarray = "0.15"
+
+[profile.release]
+opt-level = 3
+lto = true
