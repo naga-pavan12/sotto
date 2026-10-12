@@ -1,0 +1,27 @@
+# macOS / editors
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Benchmark artifacts (regenerable; audio is large)
+bench/data/
+bench/out/
+bench/tools/deep-filter
+bench/models/*.onnx
+bench/results/*.log
+
+# Rust
+target/
+
+# Xcode / Swift
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+.build/
