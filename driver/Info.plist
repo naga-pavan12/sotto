@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key><string>en</string>
+  <key>CFBundleExecutable</key><string>SottoAudio</string>
+  <key>CFBundleIdentifier</key><string>io.github.sotto-audio.SottoAudio</string>
+  <key>CFBundleInfoDictionaryVersion</key><string>6.0</string>
+  <key>CFBundleName</key><string>SottoAudio</string>
+  <key>CFBundlePackageType</key><string>BNDL</string>
+  <key>CFBundleShortVersionString</key><string>0.1.0</string>
+  <key>CFBundleVersion</key><string>0.1.0</string>
+  <key>CFBundleSupportedPlatforms</key><array><string>MacOSX</string></array>
+  <key>CFPlugInFactories</key>
+  <dict><key>C8E2A9F4-1D3B-4E6A-9C7D-0A1B2C3D4E5F</key><string>SottoEntryPoint</string></dict>
+  <key>CFPlugInTypes</key>
+  <dict>
+    <key>443ABAB8-E7B3-491A-B985-BEB9187030DB</key>
+    <array><string>C8E2A9F4-1D3B-4E6A-9C7D-0A1B2C3D4E5F</string></array>
+  </dict>
+  <key>NSHumanReadableCopyright</key><string>MIT-licensed. Sotto contributors.</string>
+  <key>sandboxSafe</key><true/>
+</dict>
+</plist>
