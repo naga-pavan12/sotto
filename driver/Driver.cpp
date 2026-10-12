@@ -20,6 +20,28 @@
 #include "auth.hpp"
 #include "bridge_ring.hpp"
 
+#include <mach/mach_time.h>
+#include <cmath>
+
+namespace {
+
+// A single clock anchor shared by both devices so their sample-time timelines are
+// phase-locked: for the same host time, both return the same sample time. This is
+// what lets the bridge (writer) and mic (reader) use one shared, time-indexed ring.
+struct SharedClock {
+    uint64_t anchorHost;
+    double ticksPerFrame;
+    SharedClock() {
+        mach_timebase_info_data_t tb;
+        mach_timebase_info(&tb);
+        double ticksPerSec = 1.0e9 * (double)tb.denom / (double)tb.numer;
+        ticksPerFrame = ticksPerSec / 48000.0;
+        anchorHost = mach_absolute_time();
+    }
+};
+
+} // namespace
+
 namespace {
 
 constexpr UInt32 kSampleRate = 48000;
@@ -126,9 +148,36 @@ private:
     std::shared_ptr<SottoState> state_;
 };
 
+// Device variant that derives its zero timestamp from a shared clock anchor.
+class SottoDevice : public aspl::Device {
+public:
+    SottoDevice(std::shared_ptr<aspl::Context> ctx,
+                const aspl::DeviceParameters& params,
+                std::shared_ptr<SharedClock> clock)
+        : aspl::Device(std::move(ctx), params), clock_(std::move(clock)) {}
+
+protected:
+    OSStatus GetZeroTimeStampImpl(UInt32 /*clientID*/, Float64* outSampleTime,
+                                  UInt64* outHostTime, UInt64* outSeed) override {
+        const double period = 480.0;
+        uint64_t now = mach_absolute_time();
+        double elapsed = (double)(now - clock_->anchorHost);
+        double framesPerPeriod = period * clock_->ticksPerFrame;
+        double n = std::floor(elapsed / framesPerPeriod);
+        *outSampleTime = n * period;
+        *outHostTime = clock_->anchorHost + (uint64_t)llround(n * framesPerPeriod);
+        *outSeed = 1;
+        return kAudioHardwareNoError;
+    }
+
+private:
+    std::shared_ptr<SharedClock> clock_;
+};
+
 std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     auto context = std::make_shared<aspl::Context>();
     auto state = std::make_shared<SottoState>();
+    auto clock = std::make_shared<SharedClock>();
 
     // --- Sotto Microphone (visible input) ---
     aspl::DeviceParameters micParams;
@@ -140,7 +189,7 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     micParams.CanBeDefaultForSystemSounds = false;
     micParams.Latency = 480;
     micParams.ZeroTimeStampPeriod = 480; // shared period keeps the two clocks aligned
-    auto micDevice = std::make_shared<aspl::Device>(context, micParams);
+    auto micDevice = std::make_shared<SottoDevice>(context, micParams, clock);
     {
         aspl::StreamParameters sp;
         sp.Direction = aspl::Direction::Input;
@@ -174,7 +223,7 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     bridgeParams.CanBeDefault = false;
     bridgeParams.CanBeDefaultForSystemSounds = false;
     bridgeParams.ZeroTimeStampPeriod = 480;
-    auto bridgeDevice = std::make_shared<aspl::Device>(context, bridgeParams);
+    auto bridgeDevice = std::make_shared<SottoDevice>(context, bridgeParams, clock);
     bridgeDevice->SetIsHidden(true);
     {
         aspl::StreamParameters sp;

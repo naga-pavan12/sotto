@@ -15,29 +15,21 @@ let seconds = 2.0
 let frameDelayExpected = 480
 let delayTolerance = 48
 
+// Resolve a device by UID via TranslateUIDToDevice, which works even for hidden
+// devices (the bridge is hidden and absent from the enumerated device list).
 func deviceID(uid: String) -> AudioDeviceID? {
-    var size = UInt32(0)
+    var cfuid = uid as CFString
+    var dev = AudioDeviceID(0)
+    var size = UInt32(MemoryLayout<AudioDeviceID>.size)
     var addr = AudioObjectPropertyAddress(
-        mSelector: kAudioHardwarePropertyDevices,
+        mSelector: kAudioHardwarePropertyTranslateUIDToDevice,
         mScope: kAudioObjectPropertyScopeGlobal,
         mElement: kAudioObjectPropertyElementMain)
-    AudioObjectGetPropertyDataSize(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size)
-    let count = Int(size) / MemoryLayout<AudioDeviceID>.size
-    var ids = [AudioDeviceID](repeating: 0, count: count)
-    AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &ids)
-    for id in ids {
-        var uidRef: CFString? = nil
-        var uidSize = UInt32(MemoryLayout<CFString?>.size)
-        var uidAddr = AudioObjectPropertyAddress(
-            mSelector: kAudioDevicePropertyDeviceUID,
-            mScope: kAudioObjectPropertyScopeGlobal,
-            mElement: kAudioObjectPropertyElementMain)
-        if AudioObjectGetPropertyData(id, &uidAddr, 0, nil, &uidSize, &uidRef) == noErr,
-           let got = uidRef as String?, got == uid {
-            return id
-        }
+    let st = withUnsafeMutablePointer(to: &cfuid) { uidPtr -> OSStatus in
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr,
+                                   UInt32(MemoryLayout<CFString>.size), uidPtr, &size, &dev)
     }
-    return nil
+    return (st == noErr && dev != 0) ? dev : nil
 }
 
 guard let mic = deviceID(uid: "SottoMicrophone"), let bridge = deviceID(uid: "SottoBridge") else {
@@ -84,9 +76,26 @@ AudioDeviceCreateIOProcIDWithBlock(&bridgeProcID, bridge, nil) { _, _, _, outDat
     }
 }
 
+// Read a custom Int (CFNumber) property identified by a FourCharCode selector.
+func readIntProp(_ dev: AudioDeviceID, _ selector: AudioObjectPropertySelector) -> Int? {
+    var ref: Unmanaged<CFPropertyList>? = nil
+    var size = UInt32(MemoryLayout<Unmanaged<CFPropertyList>?>.size)
+    var addr = AudioObjectPropertyAddress(mSelector: selector,
+        mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+    guard AudioObjectGetPropertyData(dev, &addr, 0, nil, &size, &ref) == noErr,
+          let plist = ref?.takeRetainedValue(), CFGetTypeID(plist) == CFNumberGetTypeID() else { return nil }
+    var v = 0
+    CFNumberGetValue((plist as! CFNumber), .intType, &v)
+    return v
+}
+
 AudioDeviceStart(bridge, bridgeProcID)
 AudioDeviceStart(mic, micProcID)
-Thread.sleep(forTimeInterval: seconds + 0.3)
+Thread.sleep(forTimeInterval: 0.4)
+let sBrg = readIntProp(bridge, 0x73427267) ?? -1  // 'sBrg': 1 = app authorized to write
+let sRun = readIntProp(mic, 0x7352756E) ?? -1     // 'sRun'
+print("bridge sBrg=\(sBrg) (1=authorized writer), mic sRun=\(sRun)")
+Thread.sleep(forTimeInterval: seconds)
 AudioDeviceStop(bridge, bridgeProcID)
 AudioDeviceStop(mic, micProcID)
 
