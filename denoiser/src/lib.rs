@@ -59,11 +59,35 @@ pub extern "C" fn sotto_denoiser_set_atten_lim_db(_d: *mut SottoDenoiser, _db: f
 /// Enhance one hop of `hop_size` mono samples. Returns 0 on success, non-zero on error.
 #[no_mangle]
 pub extern "C" fn sotto_denoiser_process(
-    _d: *mut SottoDenoiser,
-    _input: *const f32,
-    _output: *mut f32,
+    d: *mut SottoDenoiser,
+    input: *const f32,
+    output: *mut f32,
 ) -> i32 {
-    -1
+    if d.is_null() || input.is_null() || output.is_null() {
+        return -2;
+    }
+    let result = catch_unwind(AssertUnwindSafe(|| {
+        let this = unsafe { &mut *d };
+        let hop = this.model.hop_size;
+        let inp = unsafe { std::slice::from_raw_parts(input, hop) };
+        let noisy = ArrayView2::from_shape((1, hop), inp).expect("shape");
+        let enh = ArrayViewMut2::from_shape((1, hop), &mut this.scratch_out).expect("shape");
+        this.model.process(noisy, enh).map(|_| ())
+    }));
+    match result {
+        Ok(Ok(())) => {
+            let this = unsafe { &*d };
+            unsafe {
+                std::ptr::copy_nonoverlapping(
+                    this.scratch_out.as_ptr(),
+                    output,
+                    this.model.hop_size,
+                );
+            }
+            0
+        }
+        _ => -1,
+    }
 }
 
 /// Reset internal model state (e.g. after a device change).
@@ -77,7 +101,3 @@ pub extern "C" fn sotto_denoiser_free(d: *mut SottoDenoiser) {
         unsafe { drop(Box::from_raw(d)) };
     }
 }
-
-// Silence unused-import warnings until process() is implemented in the next task.
-#[allow(dead_code)]
-fn _uses(_: Option<ArrayView2<f32>>, _: Option<ArrayViewMut2<f32>>, _: AssertUnwindSafe<()>) {}
