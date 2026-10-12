@@ -3,6 +3,15 @@
 CARGO ?= $(shell ls -d $(HOME)/.rustup/toolchains/stable-*/bin/cargo 2>/dev/null | head -1)
 CMAKE ?= cmake
 
+# Swift Testing ships in the Command Line Tools but isn't on the default search
+# path there; add it when full Xcode isn't selected. Harmless no-op under Xcode.
+XCODE_DIR := $(shell xcode-select -p)
+CLT_FW := /Library/Developer/CommandLineTools/Library/Developer/Frameworks
+CLT_LIB := /Library/Developer/CommandLineTools/Library/Developer/usr/lib
+ifneq (,$(findstring CommandLineTools,$(XCODE_DIR)))
+SWIFT_TEST_FLAGS := -Xswiftc -F$(CLT_FW) -Xlinker -F$(CLT_FW) -Xlinker -rpath -Xlinker $(CLT_FW) -Xlinker -rpath -Xlinker $(CLT_LIB)
+endif
+
 .PHONY: all denoiser driver app test install uninstall clean
 
 all: denoiser driver app
@@ -22,7 +31,7 @@ app: denoiser
 
 test:
 	cd denoiser && $(CARGO) test --release
-	cd app && swift test
+	cd app && swift test $(SWIFT_TEST_FLAGS)
 
 install: driver
 	bash scripts/install_driver.sh
