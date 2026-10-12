@@ -1,0 +1,17 @@
+name: CI
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install CMake
+        run: brew install cmake
+      - name: Build denoiser
+        run: cd denoiser && cargo build --release
+      - name: Build driver
+        run: cmake -S driver -B driver/build -DCMAKE_BUILD_TYPE=Release && cmake --build driver/build
+      - name: Test
+        run: cd denoiser && cargo test --release
+      # Note: driver install and live-audio tests are local-only (need coreaudiod + a driver install).
