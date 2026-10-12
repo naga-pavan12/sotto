@@ -5,8 +5,9 @@
 //   "Sotto Bridge"     — hidden output; only the authorized Sotto app writes
 //                        cleaned audio here, which the driver loops to the mic.
 //
-// Task 7 builds the skeleton (devices, formats, custom-property registration).
-// The bridge->mic audio path and live property values land in Task 8.
+// The app writes processed audio to the bridge; the driver stores it in a
+// sample-time-indexed ring and serves it to any app reading the mic, delayed by
+// one 10 ms frame. Both devices advance on the host clock at 48 kHz.
 
 #include <aspl/Driver.hpp>
 
@@ -17,19 +18,19 @@
 #include <memory>
 
 #include "auth.hpp"
+#include "bridge_ring.hpp"
 
 namespace {
 
 constexpr UInt32 kSampleRate = 48000;
+constexpr Float64 kFrameDelay = 480.0; // one 10 ms frame of bridge->mic latency
 constexpr char kMicUID[] = "SottoMicrophone";
 constexpr char kBridgeUID[] = "SottoBridge";
 
-// Custom property selectors (FourCharCodes).
 constexpr AudioObjectPropertySelector kPropRunning = 'sRun';
 constexpr AudioObjectPropertySelector kPropBridge = 'sBrg';
 constexpr AudioObjectPropertySelector kPropHidden = 'sHid';
 
-// 48 kHz mono float32, packed, native endian.
 AudioStreamBasicDescription MonoFloat48() {
     AudioStreamBasicDescription f = {};
     f.mSampleRate = kSampleRate;
@@ -49,11 +50,80 @@ CFPropertyListRef MakeBool(bool v) {
     return CFNumberCreate(nullptr, kCFNumberIntType, &n);
 }
 
-// Shared driver state. Task 8 fills these with real IO.
+// Shared across both devices' handlers.
 struct SottoState {
+    BridgeRing ring{8192};
+    std::atomic<pid_t> authorizedPid{0};  // the Sotto app's pid, once it connects
     std::atomic<bool> bridgeConnected{false};
-    std::atomic<bool> micRunning{false};
+    std::atomic<int> micClients{0};       // non-Sotto apps reading the mic
     std::atomic<bool> micHidden{false};
+};
+
+// Bridge: receives the app's cleaned audio and stores it in the ring.
+class BridgeHandler : public aspl::ControlRequestHandler, public aspl::IORequestHandler {
+public:
+    explicit BridgeHandler(std::shared_ptr<SottoState> s) : state_(std::move(s)) {}
+
+    std::shared_ptr<aspl::Client> OnAddClient(const aspl::ClientInfo& info) override {
+        if (sotto::is_authorized_client(info.ProcessID, info.BundleID)) {
+            state_->authorizedPid.store(info.ProcessID, std::memory_order_release);
+            state_->bridgeConnected.store(true, std::memory_order_release);
+        }
+        return nullptr; // let libASPL create the default Client
+    }
+
+    void OnRemoveClient(std::shared_ptr<aspl::Client> client) override {
+        if (client && client->GetProcessID() == state_->authorizedPid.load()) {
+            state_->bridgeConnected.store(false, std::memory_order_release);
+            state_->authorizedPid.store(0, std::memory_order_release);
+        }
+    }
+
+    void OnWriteClientOutput(const std::shared_ptr<aspl::Client>& client,
+                             const std::shared_ptr<aspl::Stream>&,
+                             Float64 /*zeroTs*/, Float64 timestamp,
+                             const Float32* frames, UInt32 frameCount,
+                             UInt32 /*channelCount*/) override {
+        if (client && client->GetProcessID() == state_->authorizedPid.load(std::memory_order_acquire)) {
+            state_->ring.store((int64_t)timestamp, frames, frameCount);
+        }
+    }
+
+private:
+    std::shared_ptr<SottoState> state_;
+};
+
+// Mic: serves the ring (delayed by one frame) to any reading app.
+class MicHandler : public aspl::ControlRequestHandler, public aspl::IORequestHandler {
+public:
+    explicit MicHandler(std::shared_ptr<SottoState> s) : state_(std::move(s)) {}
+
+    std::shared_ptr<aspl::Client> OnAddClient(const aspl::ClientInfo& info) override {
+        if (info.ProcessID != state_->authorizedPid.load(std::memory_order_acquire)) {
+            state_->micClients.fetch_add(1, std::memory_order_acq_rel);
+        }
+        return nullptr;
+    }
+
+    void OnRemoveClient(std::shared_ptr<aspl::Client> client) override {
+        if (client && client->GetProcessID() != state_->authorizedPid.load(std::memory_order_acquire)) {
+            if (state_->micClients.load() > 0) {
+                state_->micClients.fetch_sub(1, std::memory_order_acq_rel);
+            }
+        }
+    }
+
+    void OnReadClientInput(const std::shared_ptr<aspl::Client>&,
+                           const std::shared_ptr<aspl::Stream>&,
+                           Float64 /*zeroTs*/, Float64 timestamp,
+                           void* bytes, UInt32 bytesCount) override {
+        UInt32 frames = bytesCount / sizeof(Float32);
+        state_->ring.fetch((int64_t)(timestamp - kFrameDelay),
+                           static_cast<Float32*>(bytes), frames);
+    }
+
+private:
+    std::shared_ptr<SottoState> state_;
 };
 
 std::shared_ptr<aspl::Driver> CreateSottoDriver() {
@@ -68,7 +138,8 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     micParams.ChannelCount = 1;
     micParams.CanBeDefault = true;
     micParams.CanBeDefaultForSystemSounds = false;
-    micParams.Latency = 480; // one 10 ms frame of buffering, reported to the HAL
+    micParams.Latency = 480;
+    micParams.ZeroTimeStampPeriod = 480; // shared period keeps the two clocks aligned
     auto micDevice = std::make_shared<aspl::Device>(context, micParams);
     {
         aspl::StreamParameters sp;
@@ -76,9 +147,12 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
         sp.Format = MonoFloat48();
         micDevice->AddStreamWithControlsAsync(sp);
     }
+    auto micHandler = std::make_shared<MicHandler>(state);
+    micDevice->SetControlHandler(micHandler);
+    micDevice->SetIOHandler(micHandler);
     micDevice->RegisterCustomProperty(
         kPropRunning,
-        [state]() -> CFPropertyListRef { return MakeBool(state->micRunning.load()); });
+        [state]() -> CFPropertyListRef { return MakeBool(state->micClients.load() > 0); });
     micDevice->RegisterCustomProperty(
         kPropHidden,
         [state]() -> CFPropertyListRef { return MakeBool(state->micHidden.load()); },
@@ -99,6 +173,7 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     bridgeParams.ChannelCount = 1;
     bridgeParams.CanBeDefault = false;
     bridgeParams.CanBeDefaultForSystemSounds = false;
+    bridgeParams.ZeroTimeStampPeriod = 480;
     auto bridgeDevice = std::make_shared<aspl::Device>(context, bridgeParams);
     bridgeDevice->SetIsHidden(true);
     {
@@ -107,6 +182,9 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
         sp.Format = MonoFloat48();
         bridgeDevice->AddStreamAsync(sp);
     }
+    auto bridgeHandler = std::make_shared<BridgeHandler>(state);
+    bridgeDevice->SetControlHandler(bridgeHandler);
+    bridgeDevice->SetIOHandler(bridgeHandler);
     bridgeDevice->RegisterCustomProperty(
         kPropBridge,
         [state]() -> CFPropertyListRef { return MakeBool(state->bridgeConnected.load()); });
