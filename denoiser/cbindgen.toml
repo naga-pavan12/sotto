@@ -1,0 +1,8 @@
+language = "C"
+include_guard = "SOTTO_DENOISER_H"
+tab_width = 4
+documentation = true
+documentation_style = "doxy"
+
+[export]
+prefix = ""

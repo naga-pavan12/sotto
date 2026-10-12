@@ -16,3 +16,5 @@ ndarray = "0.15"
 [profile.release]
 opt-level = 3
 lto = true
+
+strip = "none"
