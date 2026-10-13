@@ -8,145 +8,180 @@
 <meta property="og:title" content="Sotto — free noise-cancelling mic for macOS" />
 <meta property="og:description" content="On-device noise cancellation for your mic in any macOS app. No cloud, no account, no cables. Open source." />
 <meta property="og:image" content="assets/icon.png" />
-<meta name="theme-color" content="#12A085" />
+<meta name="theme-color" content="#0e1413" />
 <link rel="icon" href="assets/icon.png" />
 <style>
   :root{
-    --teal:#12A085; --teal-ink:#0b6e5c;
-    --bg:#ffffff; --surface:#f6f8f8; --card:#ffffff;
-    --text:#16201e; --muted:#5d6b68; --border:#e4e9e8;
-    --radius:14px; --maxw:960px;
+    --teal:#13b394; --teal-2:#0c8f76; --ink:#0b1210; --bg:#0b1210; --bg-2:#101b18;
+    --card:#13201d; --card-2:#17241f; --text:#eef4f2; --muted:#9db3ad; --faint:#6b807a;
+    --border:#20302c; --radius:16px; --maxw:1000px;
     --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
     --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   }
-  @media (prefers-color-scheme:dark){
-    :root{--teal:#1ec5a4;--teal-ink:#1ec5a4;--bg:#0e1413;--surface:#131b19;--card:#161f1d;--text:#eaf2f0;--muted:#9fb0ac;--border:#243230;}
-  }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
-  a{color:var(--teal-ink);text-decoration:none}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
-  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;max-width:var(--maxw);margin:0 auto}
-  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px}
-  .brand img{width:30px;height:30px;border-radius:7px}
-  .btn{display:inline-block;padding:10px 18px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid var(--border);color:var(--text)}
-  .btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
-  .btn.primary:hover{filter:brightness(1.05)}
-  .hero{text-align:center;padding:48px 0 24px}
-  .hero img.app{width:104px;height:104px;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
-  .hero h1{font-size:40px;line-height:1.15;margin:22px 0 10px;letter-spacing:-.02em}
-  .hero p.sub{font-size:19px;color:var(--muted);max-width:620px;margin:0 auto 26px}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  a{color:inherit;text-decoration:none}
+  .logo{width:1em;height:1em;display:block;flex:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 22px}
+  /* nav */
+  nav{position:sticky;top:0;z-index:20;backdrop-filter:saturate(1.3) blur(10px);background:color-mix(in srgb,var(--bg) 82%,transparent);border-bottom:1px solid var(--border)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;max-width:var(--maxw);margin:0 auto;padding:14px 22px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:650;font-size:18px}
+  .brand .logo{font-size:30px;border-radius:8px}
+  .nav-links{display:flex;align-items:center;gap:22px;font-size:15px;color:var(--muted)}
+  .nav-links a:hover{color:var(--text)}
+  .ghbtn{display:inline-flex;align-items:center;gap:8px;padding:8px 15px;border:1px solid var(--border);border-radius:10px;color:var(--text);font-weight:550;font-size:14px}
+  .ghbtn:hover{border-color:var(--teal);background:var(--card)}
+  /* hero */
+  .hero{position:relative;text-align:center;padding:84px 0 40px}
+  .glow{position:absolute;inset:-20% 0 auto 0;height:620px;z-index:-1;
+    background:radial-gradient(60% 55% at 50% 0%, color-mix(in srgb,var(--teal) 26%,transparent), transparent 70%)}
+  .hero .logo{font-size:92px;margin:0 auto 26px;border-radius:24px;filter:drop-shadow(0 18px 40px rgba(0,0,0,.45))}
+  .hero h1{font-size:clamp(34px,6vw,58px);line-height:1.08;letter-spacing:-.025em;font-weight:680}
+  .hero h1 .accent{background:linear-gradient(90deg,var(--teal),#39d6b6);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .hero p.sub{font-size:clamp(17px,2.4vw,20px);color:var(--muted);max-width:620px;margin:20px auto 30px}
   .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .demo{margin:40px auto 10px;max-width:780px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
-  .demo img{display:block;width:100%}
-  .tag{display:inline-block;font-size:13px;color:var(--teal-ink);background:color-mix(in srgb,var(--teal) 14%,transparent);padding:4px 12px;border-radius:999px;font-weight:600;margin-bottom:10px}
-  section{padding:46px 0}
-  section.alt{background:var(--surface)}
-  h2{font-size:27px;letter-spacing:-.01em;margin-bottom:8px;text-align:center}
-  .lead{text-align:center;color:var(--muted);max-width:640px;margin:0 auto 30px}
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
-  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
-  .card h3{font-size:16px;margin-bottom:6px}
+  .btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:12px;font-weight:600;font-size:16px;border:1px solid var(--border);color:var(--text);transition:.15s}
+  .btn.primary{background:var(--teal);color:#06231d;border-color:var(--teal)}
+  .btn.primary:hover{background:#2ccfac;transform:translateY(-1px)}
+  .btn.ghost:hover{border-color:var(--teal);background:var(--card)}
+  .pills{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:24px;color:var(--faint);font-size:13.5px}
+  .pills span{display:inline-flex;align-items:center;gap:6px}
+  .pills b{color:var(--teal)}
+  /* window frame for demo */
+  .window{max-width:820px;margin:52px auto 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card);box-shadow:0 30px 70px rgba(0,0,0,.5)}
+  .titlebar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:var(--card-2);border-bottom:1px solid var(--border)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .titlebar .t{margin-left:10px;font-size:12.5px;color:var(--faint)}
+  .window img{display:block;width:100%;background:#fff}
+  .cap{text-align:center;color:var(--faint);font-size:13px;margin-top:14px}
+  /* sections */
+  section{padding:64px 0;border-top:1px solid var(--border)}
+  .eyebrow{display:block;text-align:center;color:var(--teal);font-weight:650;font-size:13px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+  h2{font-size:clamp(26px,4vw,34px);letter-spacing:-.02em;text-align:center;font-weight:660}
+  .lead{text-align:center;color:var(--muted);max-width:640px;margin:12px auto 36px;font-size:17px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+  .card:hover{border-color:color-mix(in srgb,var(--teal) 45%,var(--border))}
+  .card .ic{width:40px;height:40px;border-radius:11px;background:color-mix(in srgb,var(--teal) 16%,transparent);display:flex;align-items:center;justify-content:center;margin-bottom:14px;color:var(--teal);font-size:21px}
+  .card h3{font-size:16.5px;margin-bottom:5px}
   .card p{font-size:14.5px;color:var(--muted)}
-  .flow{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow-x:auto;text-align:center;color:var(--muted)}
-  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
-  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--border)}
-  th{font-weight:600}tr:last-child td{border-bottom:0}
-  td.n{text-align:right;font-variant-numeric:tabular-nums}
-  .hl{color:var(--teal-ink);font-weight:600}
-  pre{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;color:var(--text)}
-  .note{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
-  ul.road{max-width:620px;margin:0 auto;list-style:none;display:grid;gap:10px}
-  ul.road li{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14.5px}
-  ul.road li b{color:var(--teal-ink)}
-  footer{padding:34px 0;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--border)}
+  .flow{font-family:var(--mono);font-size:13.5px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow-x:auto;text-align:center;color:var(--muted);white-space:nowrap}
+  .flow b{color:var(--teal)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:15px}
+  th,td{padding:13px 16px;text-align:left;border-bottom:1px solid var(--border)}
+  th{font-weight:600;color:var(--muted);font-size:13px}tr:last-child td{border-bottom:0}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  tr.best{background:color-mix(in srgb,var(--teal) 9%,transparent)}
+  tr.best td{color:var(--text);font-weight:600}
+  .hl{color:var(--teal)}
+  pre{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;color:#d6e6e1;line-height:1.7}
+  pre .c{color:var(--faint)}
+  .note{font-size:13px;color:var(--faint);text-align:center;margin-top:14px}
+  ul.road{max-width:640px;margin:0 auto;list-style:none;display:grid;gap:11px}
+  ul.road li{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:15px;color:var(--muted)}
+  ul.road li b{color:var(--text)}
+  @media (max-width:640px){.nav-links a:not(.ghbtn){display:none}.hero{padding:60px 0 30px}}
+  footer{padding:46px 0;text-align:center;color:var(--faint);font-size:14px;border-top:1px solid var(--border)}
+  footer a{color:var(--muted)}footer a:hover{color:var(--teal)}
+  .foot-brand{display:inline-flex;align-items:center;gap:9px;font-weight:600;color:var(--text);font-size:16px;margin-bottom:12px}
+  .foot-brand .logo{font-size:26px;border-radius:7px}
 </style>
 </head>
 <body>
-<nav>
-  <span class="brand"><img src="assets/icon.png" alt="" />Sotto</span>
-  <a class="btn" href="https://github.com/naga-pavan12/sotto">View on GitHub</a>
-</nav>
+<nav><div class="nav-in">
+  <span class="brand"><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="3" y="3" width="94" height="94" rx="24" fill="var(--teal)"/><path d="M 20.0 50.0 L 20.5 53.98 L 21.0 57.8 L 21.5 61.36 L 22.0 64.56 L 22.5 67.32 L 23.0 69.55 L 23.5 71.22 L 24.0 72.28 L 24.5 72.7 L 25.0 72.48 L 25.5 71.63 L 26.0 70.2 L 26.5 68.21 L 27.0 65.75 L 27.5 62.87 L 28.0 59.68 L 28.5 56.25 L 29.0 52.69 L 29.5 49.11 L 30.0 45.59 L 30.5 42.25 L 31.0 39.16 L 31.5 36.42 L 32.0 34.1 L 32.5 32.25 L 33.0 30.92 L 33.5 30.14 L 34.0 29.92 L 34.5 30.27 L 35.0 31.17 L 35.5 32.58 L 36.0 34.45 L 36.5 36.73 L 37.0 39.35 L 37.5 42.23 L 38.0 45.28 L 38.5 48.43 L 39.0 51.56 L 39.5 54.61 L 40.0 57.48 L 40.5 60.1 L 41.0 62.4 L 41.5 64.32 L 42.0 65.81 L 42.5 66.83 L 43.0 67.37 L 43.5 67.42 L 44.0 66.97 L 44.5 66.07 L 45.0 64.72 L 45.5 62.99 L 46.0 60.93 L 46.5 58.59 L 47.0 56.05 L 47.5 53.39 L 48.0 50.68 L 48.5 47.99 L 49.0 45.41 L 49.5 43.0 L 50.0 40.83 L 50.5 38.95 L 51.0 37.42 L 51.5 36.26 L 52.0 35.51 L 52.5 35.18 L 53.0 35.27 L 53.5 35.77 L 54.0 36.65 L 54.5 37.89 L 55.0 39.45 L 55.5 41.27 L 56.0 43.29 L 56.5 45.47 L 57.0 47.73 L 57.5 50.0 L 58.0 52.23 L 58.5 54.35 L 59.0 56.3 L 59.5 58.04 L 60.0 59.51 L 60.5 60.69 L 61.0 61.54 L 61.5 62.05 L 62.0 62.22 L 62.5 62.03 L 63.0 61.52 L 63.5 60.7 L 64.0 59.59 L 64.5 58.25 L 65.0 56.7 L 65.5 55.01 L 66.0 53.21 L 66.5 51.38 L 67.0 49.55 L 67.5 47.78 L 68.0 46.11 L 68.5 44.6 L 69.0 43.28 L 69.5 42.19 L 70.0 41.34 L 70.5 40.76 L 71.0 40.45 L 71.5 40.42 L 72.0 40.66 L 72.5 41.16 L 73.0 41.88 L 73.5 42.82 L 74.0 43.92 L 74.5 45.16 L 75.0 46.5 L 75.5 47.9 L 76.0 49.3 L 76.5 50.68 L 77.0 52.0 L 77.5 53.21 L 78.0 54.29 L 78.5 55.22 L 79.0 55.96 L 79.5 56.5 L 80.0 56.85" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg> Sotto</span>
+  <span class="nav-links">
+    <a href="#why">Why</a><a href="#how">How</a><a href="#benchmark">Benchmark</a><a href="#install">Install</a>
+    <a class="ghbtn" href="https://github.com/naga-pavan12/sotto">GitHub ★</a>
+  </span>
+</div></nav>
 
-<header class="hero wrap">
-  <img class="app" src="assets/icon.png" alt="Sotto app icon" />
-  <h1>Clean up your mic.<br/>Free, on your Mac.</h1>
-  <p class="sub">Sotto removes background noise from your microphone in any call app — keyboard, fan, traffic, chatter. On-device with DeepFilterNet3. No cloud, no account, no virtual cables.</p>
-  <div class="cta">
-    <a class="btn primary" href="https://github.com/naga-pavan12/sotto#quick-start">Get started</a>
-    <a class="btn" href="https://github.com/naga-pavan12/sotto">Star on GitHub</a>
+<header class="hero">
+  <div class="glow"></div>
+  <div class="wrap">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="3" y="3" width="94" height="94" rx="24" fill="var(--teal)"/><path d="M 20.0 50.0 L 20.5 53.98 L 21.0 57.8 L 21.5 61.36 L 22.0 64.56 L 22.5 67.32 L 23.0 69.55 L 23.5 71.22 L 24.0 72.28 L 24.5 72.7 L 25.0 72.48 L 25.5 71.63 L 26.0 70.2 L 26.5 68.21 L 27.0 65.75 L 27.5 62.87 L 28.0 59.68 L 28.5 56.25 L 29.0 52.69 L 29.5 49.11 L 30.0 45.59 L 30.5 42.25 L 31.0 39.16 L 31.5 36.42 L 32.0 34.1 L 32.5 32.25 L 33.0 30.92 L 33.5 30.14 L 34.0 29.92 L 34.5 30.27 L 35.0 31.17 L 35.5 32.58 L 36.0 34.45 L 36.5 36.73 L 37.0 39.35 L 37.5 42.23 L 38.0 45.28 L 38.5 48.43 L 39.0 51.56 L 39.5 54.61 L 40.0 57.48 L 40.5 60.1 L 41.0 62.4 L 41.5 64.32 L 42.0 65.81 L 42.5 66.83 L 43.0 67.37 L 43.5 67.42 L 44.0 66.97 L 44.5 66.07 L 45.0 64.72 L 45.5 62.99 L 46.0 60.93 L 46.5 58.59 L 47.0 56.05 L 47.5 53.39 L 48.0 50.68 L 48.5 47.99 L 49.0 45.41 L 49.5 43.0 L 50.0 40.83 L 50.5 38.95 L 51.0 37.42 L 51.5 36.26 L 52.0 35.51 L 52.5 35.18 L 53.0 35.27 L 53.5 35.77 L 54.0 36.65 L 54.5 37.89 L 55.0 39.45 L 55.5 41.27 L 56.0 43.29 L 56.5 45.47 L 57.0 47.73 L 57.5 50.0 L 58.0 52.23 L 58.5 54.35 L 59.0 56.3 L 59.5 58.04 L 60.0 59.51 L 60.5 60.69 L 61.0 61.54 L 61.5 62.05 L 62.0 62.22 L 62.5 62.03 L 63.0 61.52 L 63.5 60.7 L 64.0 59.59 L 64.5 58.25 L 65.0 56.7 L 65.5 55.01 L 66.0 53.21 L 66.5 51.38 L 67.0 49.55 L 67.5 47.78 L 68.0 46.11 L 68.5 44.6 L 69.0 43.28 L 69.5 42.19 L 70.0 41.34 L 70.5 40.76 L 71.0 40.45 L 71.5 40.42 L 72.0 40.66 L 72.5 41.16 L 73.0 41.88 L 73.5 42.82 L 74.0 43.92 L 74.5 45.16 L 75.0 46.5 L 75.5 47.9 L 76.0 49.3 L 76.5 50.68 L 77.0 52.0 L 77.5 53.21 L 78.0 54.29 L 78.5 55.22 L 79.0 55.96 L 79.5 56.5 L 80.0 56.85" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <h1>Clean up your mic.<br/><span class="accent">Free, on your Mac.</span></h1>
+    <p class="sub">Sotto removes background noise from your microphone in any call app — keyboard, fan, traffic, chatter. On-device with DeepFilterNet3. No cloud, no account, no virtual cables.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/naga-pavan12/sotto#quick-start">Get started</a>
+      <a class="btn ghost" href="https://github.com/naga-pavan12/sotto">Star on GitHub</a>
+    </div>
+    <div class="pills">
+      <span><b>&#10003;</b> 100% local</span><span><b>&#10003;</b> no account</span>
+      <span><b>&#10003;</b> no cables</span><span><b>&#10003;</b> ~4% CPU</span><span><b>&#10003;</b> MIT</span>
+    </div>
+    <div class="window">
+      <div class="titlebar"><span class="dot" style="background:#ff5f57"></span><span class="dot" style="background:#febc2e"></span><span class="dot" style="background:#28c840"></span><span class="t">Sotto — input vs output</span></div>
+      <img src="assets/demo.gif" alt="Sotto removing noise: noisy input waveform above, cleaned output below" />
+    </div>
+    <p class="cap">Top: your mic with background noise. Bottom: Sotto's output — noise suppressed, voice kept.</p>
   </div>
-  <div class="demo"><img src="assets/demo.gif" alt="Sotto removing noise: input waveform vs cleaned output" /></div>
-  <p class="note">Input (noisy) on top, Sotto's output below — background noise suppressed, voice kept.</p>
 </header>
 
-<section class="alt">
-  <div class="wrap">
-    <div style="text-align:center"><span class="tag">Why Sotto</span></div>
-    <h2>The noise-cancelling mic macOS was missing</h2>
-    <p class="lead">Great open-source mic cleanup exists — on Linux. On macOS the options are paid and closed, or tools that make you hand-wire a virtual cable. Sotto just works.</p>
-    <div class="grid">
-      <div class="card"><h3>No setup, no cables</h3><p>Ships its own Core Audio driver. You never install BlackHole or route audio by hand.</p></div>
-      <div class="card"><h3>A strong model</h3><p>DeepFilterNet3 — noticeably better than the older RNNoise most open tools use.</p></div>
-      <div class="card"><h3>Truly local</h3><p>No account, no sign-in, no telemetry. Nothing leaves your Mac. Ever.</p></div>
-      <div class="card"><h3>Free &amp; open</h3><p>MIT-licensed. Use it, read it, fork it. No subscription, no paywall on noise removal.</p></div>
-    </div>
+<section id="why"><div class="wrap">
+  <span class="eyebrow">Why Sotto</span>
+  <h2>The noise-cancelling mic macOS was missing</h2>
+  <p class="lead">Great open-source mic cleanup exists — on Linux. On macOS the options are paid and closed, or tools that make you hand-wire a virtual cable. Sotto just works.</p>
+  <div class="grid">
+    <div class="card"><div class="ic">&#9211;</div><h3>No setup, no cables</h3><p>Ships its own Core Audio driver. You never install BlackHole or route audio by hand.</p></div>
+    <div class="card"><div class="ic">&#9679;</div><h3>A strong model</h3><p>DeepFilterNet3 — noticeably better than the older RNNoise most open tools use.</p></div>
+    <div class="card"><div class="ic">&#128274;</div><h3>Truly local</h3><p>No account, no sign-in, no telemetry. Nothing leaves your Mac. Ever.</p></div>
+    <div class="card"><div class="ic">&#9733;</div><h3>Free &amp; open</h3><p>MIT-licensed. Use it, read it, fork it. No paywall on noise removal.</p></div>
   </div>
-</section>
+</div></section>
 
-<section>
-  <div class="wrap">
-    <h2>How it works</h2>
-    <p class="lead">Pick “Sotto Microphone” in your call app. Sotto captures your real mic, cleans each 10&nbsp;ms chunk on-device, and hands the clean audio to the app.</p>
-    <div class="flow">your mic → Sotto app (captures) → DeepFilterNet3 (removes noise) → “Sotto Microphone” → your call app</div>
-  </div>
-</section>
+<section id="how"><div class="wrap">
+  <span class="eyebrow">How it works</span>
+  <h2>Pick it like any other mic</h2>
+  <p class="lead">Choose &ldquo;Sotto Microphone&rdquo; in your call app. Sotto captures your real mic, cleans each 10&nbsp;ms chunk on-device, and hands the clean audio to the app.</p>
+  <div class="flow">your mic &nbsp;&rarr;&nbsp; <b>Sotto app</b> (captures) &nbsp;&rarr;&nbsp; <b>DeepFilterNet3</b> (removes noise) &nbsp;&rarr;&nbsp; <b>&ldquo;Sotto Microphone&rdquo;</b> &nbsp;&rarr;&nbsp; your call app</div>
+</div></section>
 
-<section class="alt">
-  <div class="wrap">
-    <h2>How good is it?</h2>
-    <p class="lead">Measured on a synthetic test set (6 noise types × 4 levels). Higher is better. Sotto's noise model matches Krisp; the live path is catching up.</p>
-    <table>
-      <tr><th>&nbsp;</th><th class="n">Noise removed</th><th class="n">Overall</th><th class="n">Speech (PESQ)</th></tr>
-      <tr><td>Unprocessed</td><td class="n">2.67</td><td class="n">2.44</td><td class="n">1.61</td></tr>
-      <tr><td>Sotto (live)</td><td class="n">3.58</td><td class="n">2.71</td><td class="n">2.12</td></tr>
-      <tr><td class="hl">Sotto (model)</td><td class="n hl">3.93</td><td class="n hl">3.09</td><td class="n hl">2.79</td></tr>
-      <tr><td>Krisp (standard)</td><td class="n">4.00</td><td class="n">3.08</td><td class="n">3.11</td></tr>
-    </table>
-    <p class="note">DNSMOS scores. Runs at ~4% of one CPU core. <a href="https://github.com/naga-pavan12/sotto/blob/main/bench/README.md">Full method →</a></p>
-  </div>
-</section>
+<section id="benchmark"><div class="wrap">
+  <span class="eyebrow">Benchmark</span>
+  <h2>How good is it?</h2>
+  <p class="lead">Measured on a synthetic test set (6 noise types &times; 4 levels), DNSMOS scores, higher is better. Sotto&rsquo;s noise model matches Krisp; the live path is catching up.</p>
+  <table>
+    <tr><th>&nbsp;</th><th class="n">Noise removed</th><th class="n">Overall</th><th class="n">Speech (PESQ)</th></tr>
+    <tr><td>Unprocessed</td><td class="n">2.67</td><td class="n">2.44</td><td class="n">1.61</td></tr>
+    <tr><td>Sotto (live)</td><td class="n">3.58</td><td class="n">2.71</td><td class="n">2.12</td></tr>
+    <tr class="best"><td>Sotto (model)</td><td class="n">3.93</td><td class="n">3.09</td><td class="n">2.79</td></tr>
+    <tr><td>Krisp (standard)</td><td class="n">4.00</td><td class="n">3.08</td><td class="n">3.11</td></tr>
+  </table>
+  <p class="note">Runs at ~4% of one CPU core. <a href="https://github.com/naga-pavan12/sotto/blob/main/bench/README.md" style="color:var(--teal)">Full method &rarr;</a></p>
+</div></section>
 
-<section>
-  <div class="wrap">
-    <h2>Install</h2>
-    <p class="lead">Developer preview — build from source on macOS 14+ (Apple Silicon). A one-click signed installer is on the way.</p>
-    <pre>git clone https://github.com/naga-pavan12/sotto.git
+<section id="install"><div class="wrap">
+  <span class="eyebrow">Install</span>
+  <h2>Build from source</h2>
+  <p class="lead">Developer preview on macOS 14+ (Apple Silicon). A one-click signed installer is on the way.</p>
+  <pre><span class="c"># clone, build, install the driver, run the app</span>
+git clone https://github.com/naga-pavan12/sotto.git
 cd sotto
-make            # build the denoiser, driver, and app
-make install    # install the audio driver (asks for your password)
-make app        # build Sotto.app
+make
+make install   <span class="c"># installs the audio driver (asks for your password)</span>
+make app
 open app/build/Sotto.app</pre>
-    <p class="note">Then choose “Sotto Microphone” in Zoom, Meet, Teams, Discord, or OBS.</p>
-  </div>
-</section>
+  <p class="note">Then choose &ldquo;Sotto Microphone&rdquo; in Zoom, Meet, Teams, Discord, or OBS.</p>
+</div></section>
 
-<section class="alt">
-  <div class="wrap">
-    <h2>What's next</h2>
-    <ul class="road">
-      <li><b>Signed installer + Homebrew</b> — one-click install, universal (Intel + Apple Silicon).</li>
-      <li><b>Live-quality parity</b> — tighter clock sync and buffering to match the model's offline quality in real time.</li>
-      <li><b>Only during calls</b> — process when an app is actually using the mic.</li>
-      <li><b>More</b> — clean incoming audio, background-voice isolation, Windows and Linux.</li>
-    </ul>
-  </div>
-</section>
+<section id="roadmap"><div class="wrap">
+  <span class="eyebrow">Roadmap</span>
+  <h2>What&rsquo;s next</h2>
+  <ul class="road">
+    <li><b>Signed installer + Homebrew</b> — one-click install, universal (Intel + Apple Silicon).</li>
+    <li><b>Live-quality parity</b> — tighter clock sync and buffering to match the model&rsquo;s offline quality in real time.</li>
+    <li><b>Only during calls</b> — process when an app is actually using the mic.</li>
+    <li><b>More</b> — clean incoming audio, background-voice isolation, Windows and Linux.</li>
+  </ul>
+</div></section>
 
-<footer>
-  <p>Sotto · MIT-licensed · built on <a href="https://github.com/Rikorose/DeepFilterNet">DeepFilterNet</a> and <a href="https://github.com/gavv/libASPL">libASPL</a></p>
-  <p style="margin-top:6px"><a href="https://github.com/naga-pavan12/sotto">github.com/naga-pavan12/sotto</a> · Independent project, not affiliated with any commercial vendor.</p>
-</footer>
+<footer><div class="wrap">
+  <div class="foot-brand"><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="3" y="3" width="94" height="94" rx="24" fill="var(--teal)"/><path d="M 20.0 50.0 L 20.5 53.98 L 21.0 57.8 L 21.5 61.36 L 22.0 64.56 L 22.5 67.32 L 23.0 69.55 L 23.5 71.22 L 24.0 72.28 L 24.5 72.7 L 25.0 72.48 L 25.5 71.63 L 26.0 70.2 L 26.5 68.21 L 27.0 65.75 L 27.5 62.87 L 28.0 59.68 L 28.5 56.25 L 29.0 52.69 L 29.5 49.11 L 30.0 45.59 L 30.5 42.25 L 31.0 39.16 L 31.5 36.42 L 32.0 34.1 L 32.5 32.25 L 33.0 30.92 L 33.5 30.14 L 34.0 29.92 L 34.5 30.27 L 35.0 31.17 L 35.5 32.58 L 36.0 34.45 L 36.5 36.73 L 37.0 39.35 L 37.5 42.23 L 38.0 45.28 L 38.5 48.43 L 39.0 51.56 L 39.5 54.61 L 40.0 57.48 L 40.5 60.1 L 41.0 62.4 L 41.5 64.32 L 42.0 65.81 L 42.5 66.83 L 43.0 67.37 L 43.5 67.42 L 44.0 66.97 L 44.5 66.07 L 45.0 64.72 L 45.5 62.99 L 46.0 60.93 L 46.5 58.59 L 47.0 56.05 L 47.5 53.39 L 48.0 50.68 L 48.5 47.99 L 49.0 45.41 L 49.5 43.0 L 50.0 40.83 L 50.5 38.95 L 51.0 37.42 L 51.5 36.26 L 52.0 35.51 L 52.5 35.18 L 53.0 35.27 L 53.5 35.77 L 54.0 36.65 L 54.5 37.89 L 55.0 39.45 L 55.5 41.27 L 56.0 43.29 L 56.5 45.47 L 57.0 47.73 L 57.5 50.0 L 58.0 52.23 L 58.5 54.35 L 59.0 56.3 L 59.5 58.04 L 60.0 59.51 L 60.5 60.69 L 61.0 61.54 L 61.5 62.05 L 62.0 62.22 L 62.5 62.03 L 63.0 61.52 L 63.5 60.7 L 64.0 59.59 L 64.5 58.25 L 65.0 56.7 L 65.5 55.01 L 66.0 53.21 L 66.5 51.38 L 67.0 49.55 L 67.5 47.78 L 68.0 46.11 L 68.5 44.6 L 69.0 43.28 L 69.5 42.19 L 70.0 41.34 L 70.5 40.76 L 71.0 40.45 L 71.5 40.42 L 72.0 40.66 L 72.5 41.16 L 73.0 41.88 L 73.5 42.82 L 74.0 43.92 L 74.5 45.16 L 75.0 46.5 L 75.5 47.9 L 76.0 49.3 L 76.5 50.68 L 77.0 52.0 L 77.5 53.21 L 78.0 54.29 L 78.5 55.22 L 79.0 55.96 L 79.5 56.5 L 80.0 56.85" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg> Sotto</div>
+  <p>MIT-licensed &middot; built on <a href="https://github.com/Rikorose/DeepFilterNet">DeepFilterNet</a> and <a href="https://github.com/gavv/libASPL">libASPL</a></p>
+  <p style="margin-top:8px"><a href="https://github.com/naga-pavan12/sotto">github.com/naga-pavan12/sotto</a> &middot; Independent project, not affiliated with any commercial vendor.</p>
+</div></footer>
 </body>
 </html>
