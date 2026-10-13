@@ -24,18 +24,19 @@ private final class GainDenoiser: DenoiseProcessing {
 
 @Test func bypassSkipsDenoiser() {
     let chain = DspChain(denoiser: GainDenoiser())
-    chain.bypass = true
+    chain.setBypass(true)
     let input = (0..<480).map { Float($0) }
-    #expect(chain.processHop(input) == input)
+    #expect(chain.processHop(input) == input)  // bypass applied on the DSP tick
 }
 
 @Test func strengthMapsToAttenLimit() {
     let d = FailingDenoiser()
     let chain = DspChain(denoiser: d)
-    chain.setStrength(50)
+    let hop = [Float](repeating: 0, count: 480)
+    chain.requestStrength(50); _ = chain.processHop(hop)
     #expect(d.lastDb == 20.0)       // 50 * 0.4
-    chain.setStrength(100)
+    chain.requestStrength(100); _ = chain.processHop(hop)
     #expect(d.lastDb == 100.0)      // unlimited
-    chain.setStrength(0)
+    chain.requestStrength(0); _ = chain.processHop(hop)
     #expect(d.lastDb == 0.0)
 }
