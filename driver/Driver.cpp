@@ -45,7 +45,7 @@ struct SharedClock {
 namespace {
 
 constexpr UInt32 kSampleRate = 48000;
-constexpr Float64 kFrameDelay = 480.0; // one 10 ms frame of bridge->mic latency
+constexpr Float64 kFrameDelay = 960.0; // read margin behind the writer (absorbs cross-device jitter)
 constexpr char kMicUID[] = "SottoMicrophone";
 constexpr char kBridgeUID[] = "SottoBridge";
 
@@ -79,6 +79,10 @@ struct SottoState {
     std::atomic<bool> bridgeConnected{false};
     std::atomic<int> micClients{0};       // non-Sotto apps reading the mic
     std::atomic<bool> micHidden{false};
+    // Diagnostics (observable via custom properties).
+    std::atomic<int64_t> lastWriteTs{-1};
+    std::atomic<int64_t> lastReadTs{-1};
+    std::atomic<int64_t> writeCount{0};
 };
 
 // Bridge: receives the app's cleaned audio and stores it in the ring.
@@ -101,14 +105,20 @@ public:
         }
     }
 
-    void OnWriteClientOutput(const std::shared_ptr<aspl::Client>& client,
-                             const std::shared_ptr<aspl::Stream>&,
-                             Float64 /*zeroTs*/, Float64 timestamp,
-                             const Float32* frames, UInt32 frameCount,
-                             UInt32 /*channelCount*/) override {
-        if (client && client->GetProcessID() == state_->authorizedPid.load(std::memory_order_acquire)) {
-            state_->ring.store((int64_t)timestamp, frames, frameCount);
+    // With mixing enabled (the default), the HAL delivers the stream's final
+    // output here. The bridge is hidden, so only the authorized Sotto app (which
+    // resolves it via UID translation) can connect and feed it; we gate the store
+    // on that authorized connection.
+    void OnWriteMixedOutput(const std::shared_ptr<aspl::Stream>&,
+                            Float64 /*zeroTs*/, Float64 timestamp,
+                            const void* bytes, UInt32 bytesCount) override {
+        if (state_->authorizedPid.load(std::memory_order_acquire) == 0) {
+            return;
         }
+        UInt32 frameCount = bytesCount / sizeof(Float32);
+        state_->ring.store((int64_t)timestamp, static_cast<const Float32*>(bytes), frameCount);
+        state_->lastWriteTs.store((int64_t)timestamp, std::memory_order_relaxed);
+        state_->writeCount.fetch_add(1, std::memory_order_relaxed);
     }
 
 private:
@@ -142,6 +152,7 @@ public:
         UInt32 frames = bytesCount / sizeof(Float32);
         state_->ring.fetch((int64_t)(timestamp - kFrameDelay),
                            static_cast<Float32*>(bytes), frames);
+        state_->lastReadTs.store((int64_t)(timestamp - kFrameDelay), std::memory_order_relaxed);
     }
 
 private:
@@ -237,6 +248,21 @@ std::shared_ptr<aspl::Driver> CreateSottoDriver() {
     bridgeDevice->RegisterCustomProperty(
         kPropBridge,
         [state]() -> CFPropertyListRef { return MakeBool(state->bridgeConnected.load()); });
+
+    // Diagnostics: 'sWC' write count, 'sLW' last write ts, 'sLR' last read ts.
+    auto makeInt = [](int64_t v) -> CFPropertyListRef {
+        int n = (int)v;
+        return CFNumberCreate(nullptr, kCFNumberIntType, &n);
+    };
+    micDevice->RegisterCustomProperty(
+        (AudioObjectPropertySelector)'sWC ',
+        [state, makeInt]() -> CFPropertyListRef { return makeInt(state->writeCount.load()); });
+    micDevice->RegisterCustomProperty(
+        (AudioObjectPropertySelector)'sLW ',
+        [state, makeInt]() -> CFPropertyListRef { return makeInt(state->lastWriteTs.load()); });
+    micDevice->RegisterCustomProperty(
+        (AudioObjectPropertySelector)'sLR ',
+        [state, makeInt]() -> CFPropertyListRef { return makeInt(state->lastReadTs.load()); });
 
     auto plugin = std::make_shared<aspl::Plugin>(context);
     plugin->AddDevice(micDevice);
