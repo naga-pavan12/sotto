@@ -145,7 +145,7 @@ public final class AudioEngine {
 
     // MARK: - Device helpers
 
-    static func deviceID(uid: String) -> AudioDeviceID? {
+    public static func deviceID(uid: String) -> AudioDeviceID? {
         var cf = uid as CFString
         var dev = AudioDeviceID(0)
         var size = UInt32(MemoryLayout<AudioDeviceID>.size)

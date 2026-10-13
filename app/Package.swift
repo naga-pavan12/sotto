@@ -17,5 +17,9 @@ let package = Package(
             name: "SottoCLI",
             dependencies: ["SottoCore"],
             linkerSettings: [.unsafeFlags(["-L../denoiser/target/release"])]),
+        .executableTarget(
+            name: "Sotto",
+            dependencies: ["SottoCore"],
+            linkerSettings: [.unsafeFlags(["-L../denoiser/target/release"])]),
     ]
 )

@@ -26,8 +26,9 @@ driver:
 	@test -d driver/build/SottoAudio.driver && echo "driver: built SottoAudio.driver"
 
 app: denoiser
-	cd app && swift build -c release
-	@echo "app: built (bundle assembly in task 14)"
+	cd app && swift build --product Sotto -c release -Xlinker -L../denoiser/target/release
+	bash scripts/assemble_app.sh
+	@echo "app: built app/build/Sotto.app"
 
 test:
 	cd denoiser && $(CARGO) test --release
