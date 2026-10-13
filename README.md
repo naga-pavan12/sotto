@@ -21,8 +21,8 @@ A free, local, MIT-licensed alternative to Krisp's core feature.
 ![license: MIT](https://img.shields.io/badge/license-MIT-0FA98A)
 ![no cloud](https://img.shields.io/badge/100%25-local-0FA98A)
 
-<!-- Add a 15-second demo GIF here: hold-to-compare, noisy → clean. -->
-<!-- ![Sotto demo](docs/demo.gif) -->
+
+![Sotto demo](docs/demo.gif)
 
 </div>
 
@@ -59,7 +59,7 @@ cable, or research plugins that need a host app. Sotto fills that gap.
 or Command Line Tools, [Rust](https://rustup.rs), and [CMake](https://cmake.org).
 
 ```bash
-git clone https://github.com/sotto-audio/sotto.git
+git clone https://github.com/naga-pavan12/sotto.git
 cd sotto
 make            # build the denoiser, driver, and app
 make install    # install the audio driver (asks for your password; restarts Core Audio)
