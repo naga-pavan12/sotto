@@ -1,8 +1,8 @@
 import AppKit
 import CoreGraphics
 
-// Render the Sotto app icon at a given pixel size: a flat indigo squircle with a
-// white sound-wave equalizer (bars rising then settling = noise cleaned to clean voice).
+// Sotto app icon: a flat teal squircle with a white waveform that starts jagged
+// (noise) on the left and smooths into a calm wave on the right — noise cancelled.
 func render(_ size: Int, to path: String) {
     let s = CGFloat(size)
     let cs = CGColorSpaceCreateDeviceRGB()
@@ -11,38 +11,37 @@ func render(_ size: Int, to path: String) {
                         bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
     ctx.clear(CGRect(x: 0, y: 0, width: s, height: s))
 
-    // Rounded-square background (macOS squircle-ish), flat indigo.
     let inset = s * 0.045
     let rect = CGRect(x: inset, y: inset, width: s - 2*inset, height: s - 2*inset)
     let radius = (s - 2*inset) * 0.225
-    let bg = CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil)
-    ctx.addPath(bg)
-    ctx.setFillColor(CGColor(red: 0.30, green: 0.26, blue: 0.72, alpha: 1.0)) // indigo
+    ctx.addPath(CGPath(roundedRect: rect, cornerWidth: radius, cornerHeight: radius, transform: nil))
+    ctx.setFillColor(CGColor(red: 0.07, green: 0.63, blue: 0.53, alpha: 1.0)) // teal
     ctx.fillPath()
 
-    // Equalizer bars (white), heights shaped like a smooth hump — "clean voice".
-    let heights: [CGFloat] = [0.18, 0.34, 0.56, 0.80, 0.56, 0.34, 0.18]
-    let n = heights.count
-    let region = rect.insetBy(dx: rect.width * 0.20, dy: rect.height * 0.20)
-    let gap = region.width / CGFloat(n) * 0.42
-    let barW = (region.width - gap * CGFloat(n - 1)) / CGFloat(n)
-    ctx.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
-    for i in 0..<n {
-        let h = region.height * heights[i]
-        let x = region.minX + CGFloat(i) * (barW + gap)
-        let y = region.midY - h/2
-        let br = barW/2
-        ctx.addPath(CGPath(roundedRect: CGRect(x: x, y: y, width: barW, height: h),
-                           cornerWidth: br, cornerHeight: br, transform: nil))
+    // Waveform path: noisy left -> calm right.
+    let region = rect.insetBy(dx: rect.width * 0.17, dy: rect.height * 0.30)
+    let steps = 480
+    let maxAmp = region.height * 0.46
+    // A single smooth voice wave whose amplitude settles from loud (left) to calm
+    // (right): the sound after noise is removed. No grain — clean at every size.
+    let wave = CGMutablePath()
+    for i in 0...steps {
+        let t = CGFloat(i) / CGFloat(steps)
+        let x = region.minX + region.width * t
+        let env = 0.30 + 0.70 * (1.0 - t)               // amplitude eases down l->r
+        let y = region.midY + maxAmp * env * sin(t * .pi * 2 * 3.2)
+        if i == 0 { wave.move(to: CGPoint(x: x, y: y)) } else { wave.addLine(to: CGPoint(x: x, y: y)) }
     }
-    ctx.fillPath()
+    ctx.addPath(wave)
+    ctx.setStrokeColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+    ctx.setLineWidth(s * 0.045)
+    ctx.setLineCap(.round)
+    ctx.setLineJoin(.round)
+    ctx.strokePath()
 
     let img = ctx.makeImage()!
     let rep = NSBitmapImageRep(cgImage: img)
-    let data = rep.representation(using: .png, properties: [:])!
-    try! data.write(to: URL(fileURLWithPath: path))
+    try! rep.representation(using: .png, properties: [:])!.write(to: URL(fileURLWithPath: path))
 }
-
-let outDir = CommandLine.arguments[1]
-render(1024, to: "\(outDir)/icon_1024.png")
-print("rendered \(outDir)/icon_1024.png")
+render(1024, to: "\(CommandLine.arguments[1])/icon_1024.png")
+print("rendered")
