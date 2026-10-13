@@ -3,6 +3,15 @@ import SottoCore
 
 private let sottoTeal = Color(red: 0.07, green: 0.63, blue: 0.53)
 
+private let sottoWave: Image = {
+    if let url = Bundle.main.url(forResource: "MenuIcon@2x", withExtension: "png"),
+       let ns = NSImage(contentsOf: url) {
+        ns.isTemplate = true
+        return Image(nsImage: ns).renderingMode(.template)
+    }
+    return Image(systemName: "waveform")
+}()
+
 struct MenuView: View {
     @Bindable var model: AppModel
 
@@ -26,7 +35,7 @@ struct MenuView: View {
         HStack(spacing: 11) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous).fill(sottoTeal)
-                Image(systemName: "waveform").font(.system(size: 20, weight: .semibold)).foregroundStyle(.white)
+                sottoWave.resizable().scaledToFit().frame(width: 24, height: 15).foregroundStyle(.white)
             }
             .frame(width: 42, height: 42)
             VStack(alignment: .leading, spacing: 1) {
