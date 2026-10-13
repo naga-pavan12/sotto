@@ -18,7 +18,7 @@ struct SottoApp: App {
         .windowResizability(.contentSize)
 
         // Also available from the menu bar.
-        MenuBarExtra("Sotto", systemImage: model.enabled ? "waveform.circle.fill" : "waveform.circle") {
+        MenuBarExtra("Sotto", systemImage: "waveform") {
             MenuView(model: model)
         }
         .menuBarExtraStyle(.window)

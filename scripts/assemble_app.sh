@@ -3,7 +3,8 @@
 set -euo pipefail
 APP="app/build/Sotto.app"
 rm -rf "$APP"
-mkdir -p "$APP/Contents/MacOS"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+cp art/Sotto.icns "$APP/Contents/Resources/AppIcon.icns"
 cp app/.build/release/Sotto "$APP/Contents/MacOS/Sotto"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
@@ -12,6 +13,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
   <key>CFBundleExecutable</key><string>Sotto</string>
   <key>CFBundleIdentifier</key><string>io.github.sotto-audio.Sotto</string>
   <key>CFBundleName</key><string>Sotto</string>
+  <key>CFBundleIconFile</key><string>AppIcon</string>
   <key>CFBundlePackageType</key><string>APPL</string>
   <key>CFBundleShortVersionString</key><string>0.1.0</string>
   <key>LSUIElement</key><false/>
