@@ -54,6 +54,14 @@ cable, or research plugins that need a host app. Sotto fills that gap.
 > a source build (unsigned); a one-click signed installer is on the way. See
 > [limitations](#limitations) and the [roadmap](#roadmap).
 
+## Download
+
+**[Download Sotto for macOS →](https://github.com/naga-pavan12/sotto/releases/latest)** (Apple Silicon, macOS 14+)
+
+The first release is a developer preview and isn't notarized yet, so macOS will ask
+you to confirm: right-click the `.pkg` → Open, or allow it in **System Settings →
+Privacy & Security**. Prefer to build it yourself? See below.
+
 ## Quick start
 
 **Requirements:** macOS 14+ on Apple Silicon, plus [Xcode](https://developer.apple.com/xcode/)
