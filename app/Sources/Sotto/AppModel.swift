@@ -49,7 +49,13 @@ final class AppModel {
 
     private func reconcile() {
         persist()
-        if enabled && !selectedMicUID.isEmpty { start() } else { stop() }
+        guard !selectedMicUID.isEmpty else { stop(); return }
+        start()                          // keep the engine running whenever a mic is chosen
+        engine?.bypass = !enabled        // off => pass the raw mic through, never silence
+        statusLine = running
+            ? (enabled ? "Active · cleaning \(micName(selectedMicUID))"
+                       : "Off · passing through \(micName(selectedMicUID))")
+            : statusLine
     }
 
     private func start() {
