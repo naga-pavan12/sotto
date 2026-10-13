@@ -26,3 +26,6 @@ DerivedData/
 xcuserdata/
 .build/
 art/Sotto.iconset/
+
+# Release artifacts (attached to GitHub Releases, not tracked)
+dist/
