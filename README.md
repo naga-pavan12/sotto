@@ -32,8 +32,19 @@ for the architecture.
 
 ## Roadmap
 
-v0.2: automatic default-device switching, per-app call detection, Bluetooth handling.
-Later: incoming-audio cleaning, background-voice isolation, Windows and Linux.
+**v0.2**
+- **Driver watches app liveness** — reset the driver and hide the device if the
+  app crashes or is force-killed, instead of relying on a clean-quit callback
+  (today a hard kill leaves a stale "connected" flag). Mirrors how Krisp's
+  app-watcher hides its devices when the app goes away.
+- Process the mic **only during calls** (detect when an app is reading Sotto
+  Microphone) instead of capturing continuously while enabled.
+- Automatic default-device switching and per-app call detection.
+- Bluetooth/AirPods handling (grace period on profile switch).
+- Tighter clock sync + drift-corrected buffering to close the live-quality gap.
+
+**Later:** incoming-audio (speaker) cleaning, background-voice isolation,
+signed/notarized installer + Homebrew cask, Windows and Linux.
 
 ## License
 
