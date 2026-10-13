@@ -7,8 +7,10 @@ Teams) can select. It captures your real mic, removes background noise with
 [DeepFilterNet3](https://github.com/Rikorose/DeepFilterNet), and presents the clean
 result — all on your machine. No account, no cloud, no telemetry.
 
-> Status: v0.1 in development. Mic noise removal only. See the
-> [roadmap](#roadmap) for what's next.
+> Status: v0.1 — working end-to-end. Captures your mic, removes background noise
+> with DeepFilterNet3, and presents a "Sotto Microphone" any call app can select.
+> Live quality: DNSMOS 2.7 (noise-removal BAK 3.6); see [bench/README.md](bench/README.md).
+> See the [roadmap](#roadmap) for what's next.
 
 ## Build from source
 

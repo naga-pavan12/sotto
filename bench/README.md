@@ -62,3 +62,30 @@ uv run python run_baselines.py
 uv run python capture_krisp.py        # needs BlackHole + Krisp mic set to BlackHole 2ch
 uv run python evaluate.py
 ```
+
+## Sotto live measurement (Task 15)
+
+`measure_sotto.py` runs the full shipped pipeline: it plays each noisy clip into
+BlackHole 2ch, the running `Sotto.app`/`SottoCLI` engine captures BlackHole →
+DeepFilterNet3 → Sotto Bridge → **Sotto Microphone**, and the script records
+Sotto Microphone and scores it.
+
+**Live result (24-clip sample, one speaker across all 6 noise types × 4 SNRs, 2026-10-13):**
+
+| | PESQ | STOI | SI-SDR | DNSMOS SIG | DNSMOS BAK | DNSMOS OVRL |
+|---|---|---|---|---|---|---|
+| Sotto (live) | 2.12 | 0.86 | 6.2 | 3.16 | 3.58 | 2.71 |
+| DeepFilterNet3 (offline ceiling) | 2.79 | 0.96 | 16.2 | 3.43 | 3.93 | 3.09 |
+| Krisp (standard NC) | 2.88 | 0.97 | 17.8 | 3.35 | 4.01 | 3.07 |
+
+Sotto removes noise well (BAK 3.58) and works end-to-end, but the live path sits
+~0.4 DNSMOS below the model's offline ceiling. The gap is real-time path overhead:
+the capture ↔ bridge ↔ mic hops run on independent device clocks, and the test
+feeds audio through a BlackHole loopback, adding resampling/buffer jitter. Closing
+it (tighter clock sync, drift-corrected buffering) is the main v0.1→v0.2 quality item.
+
+```bash
+make driver && make install && make app
+open app/build/Sotto.app        # or run SottoCLI directly for headless tests
+cd bench && uv run python measure_sotto.py 24 && uv run python evaluate.py sotto
+```
