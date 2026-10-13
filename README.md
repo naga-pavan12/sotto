@@ -14,12 +14,13 @@ on your machine, and needs no account, no cloud, no subscription.
 
 A free, local, MIT-licensed alternative to Krisp's core feature.
 
-[Quick start](#quick-start) · [Why Sotto](#why-sotto) · [How it works](#how-it-works) · [Benchmark](#benchmark) · [Roadmap](#roadmap)
+**[Website](https://sotto-website-teal.vercel.app/)** · [Quick start](#quick-start) · [Why Sotto](#why-sotto) · [How it works](#how-it-works) · [Benchmark](#benchmark) · [Roadmap](#roadmap)
 
 ![status: v0.1 developer preview](https://img.shields.io/badge/status-v0.1_preview-0FA98A)
 ![platform: macOS 14+](https://img.shields.io/badge/macOS-14%2B-333)
 ![license: MIT](https://img.shields.io/badge/license-MIT-0FA98A)
 ![no cloud](https://img.shields.io/badge/100%25-local-0FA98A)
+[![website](https://img.shields.io/badge/website-sotto--website--teal.vercel.app-0FA98A)](https://sotto-website-teal.vercel.app/)
 
 
 ![Sotto demo](docs/demo.gif)
