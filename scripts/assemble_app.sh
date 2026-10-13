@@ -5,6 +5,7 @@ APP="app/build/Sotto.app"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
 cp art/Sotto.icns "$APP/Contents/Resources/AppIcon.icns"
+cp art/MenuIcon.png art/MenuIcon@2x.png "$APP/Contents/Resources/"
 cp app/.build/release/Sotto "$APP/Contents/MacOS/Sotto"
 cat > "$APP/Contents/Info.plist" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>

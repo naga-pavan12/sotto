@@ -6,8 +6,6 @@ struct SottoApp: App {
     @State private var model = AppModel()
 
     var body: some Scene {
-        // A normal window (and dock icon) so the app is always findable — even on a
-        // crowded/notched menu bar where the MenuBarExtra icon can be hidden.
         Window("Sotto", id: "main") {
             MenuView(model: model)
                 .frame(width: 300)
@@ -17,10 +15,27 @@ struct SottoApp: App {
         }
         .windowResizability(.contentSize)
 
-        // Also available from the menu bar.
-        MenuBarExtra("Sotto", systemImage: "waveform") {
+        MenuBarExtra {
             MenuView(model: model)
+        } label: {
+            Image(nsImage: Self.menuBarIcon)
         }
         .menuBarExtraStyle(.window)
     }
+
+    // Custom template icon matching the app logo's wave motif; falls back to an SF
+    // Symbol if the bundled image is missing.
+    static let menuBarIcon: NSImage = {
+        let image: NSImage
+        if let url = Bundle.main.url(forResource: "MenuIcon@2x", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            image = img
+        } else {
+            image = NSImage(systemSymbolName: "waveform", accessibilityDescription: "Sotto")
+                ?? NSImage()
+        }
+        image.isTemplate = true
+        image.size = NSSize(width: 26, height: 16)
+        return image
+    }()
 }
