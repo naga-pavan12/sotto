@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sotto — free noise-cancelling mic for macOS</title>
+<meta name="description" content="Sotto is a free, on-device noise-cancelling microphone for macOS. DeepFilterNet3 in a native app — no cloud, no account, no virtual cables. Open source, MIT." />
+<meta property="og:title" content="Sotto — free noise-cancelling mic for macOS" />
+<meta property="og:description" content="On-device noise cancellation for your mic in any macOS app. No cloud, no account, no cables. Open source." />
+<meta property="og:image" content="assets/icon.png" />
+<meta name="theme-color" content="#12A085" />
+<link rel="icon" href="assets/icon.png" />
+<style>
+  :root{
+    --teal:#12A085; --teal-ink:#0b6e5c;
+    --bg:#ffffff; --surface:#f6f8f8; --card:#ffffff;
+    --text:#16201e; --muted:#5d6b68; --border:#e4e9e8;
+    --radius:14px; --maxw:960px;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--teal:#1ec5a4;--teal-ink:#1ec5a4;--bg:#0e1413;--surface:#131b19;--card:#161f1d;--text:#eaf2f0;--muted:#9fb0ac;--border:#243230;}
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased}
+  a{color:var(--teal-ink);text-decoration:none}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 20px;max-width:var(--maxw);margin:0 auto}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:17px}
+  .brand img{width:30px;height:30px;border-radius:7px}
+  .btn{display:inline-block;padding:10px 18px;border-radius:10px;font-weight:600;font-size:15px;border:1px solid var(--border);color:var(--text)}
+  .btn.primary{background:var(--teal);color:#fff;border-color:var(--teal)}
+  .btn.primary:hover{filter:brightness(1.05)}
+  .hero{text-align:center;padding:48px 0 24px}
+  .hero img.app{width:104px;height:104px;border-radius:24px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+  .hero h1{font-size:40px;line-height:1.15;margin:22px 0 10px;letter-spacing:-.02em}
+  .hero p.sub{font-size:19px;color:var(--muted);max-width:620px;margin:0 auto 26px}
+  .cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+  .demo{margin:40px auto 10px;max-width:780px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+  .demo img{display:block;width:100%}
+  .tag{display:inline-block;font-size:13px;color:var(--teal-ink);background:color-mix(in srgb,var(--teal) 14%,transparent);padding:4px 12px;border-radius:999px;font-weight:600;margin-bottom:10px}
+  section{padding:46px 0}
+  section.alt{background:var(--surface)}
+  h2{font-size:27px;letter-spacing:-.01em;margin-bottom:8px;text-align:center}
+  .lead{text-align:center;color:var(--muted);max-width:640px;margin:0 auto 30px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .card h3{font-size:16px;margin-bottom:6px}
+  .card p{font-size:14.5px;color:var(--muted)}
+  .flow{font-family:var(--mono);font-size:13px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;overflow-x:auto;text-align:center;color:var(--muted)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;font-size:14.5px}
+  th,td{padding:11px 14px;text-align:left;border-bottom:1px solid var(--border)}
+  th{font-weight:600}tr:last-child td{border-bottom:0}
+  td.n{text-align:right;font-variant-numeric:tabular-nums}
+  .hl{color:var(--teal-ink);font-weight:600}
+  pre{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;overflow-x:auto;font-family:var(--mono);font-size:13.5px;color:var(--text)}
+  .note{font-size:13px;color:var(--muted);text-align:center;margin-top:12px}
+  ul.road{max-width:620px;margin:0 auto;list-style:none;display:grid;gap:10px}
+  ul.road li{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-size:14.5px}
+  ul.road li b{color:var(--teal-ink)}
+  footer{padding:34px 0;text-align:center;color:var(--muted);font-size:14px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<nav>
+  <span class="brand"><img src="assets/icon.png" alt="" />Sotto</span>
+  <a class="btn" href="https://github.com/naga-pavan12/sotto">View on GitHub</a>
+</nav>
+
+<header class="hero wrap">
+  <img class="app" src="assets/icon.png" alt="Sotto app icon" />
+  <h1>Clean up your mic.<br/>Free, on your Mac.</h1>
+  <p class="sub">Sotto removes background noise from your microphone in any call app — keyboard, fan, traffic, chatter. On-device with DeepFilterNet3. No cloud, no account, no virtual cables.</p>
+  <div class="cta">
+    <a class="btn primary" href="https://github.com/naga-pavan12/sotto#quick-start">Get started</a>
+    <a class="btn" href="https://github.com/naga-pavan12/sotto">Star on GitHub</a>
+  </div>
+  <div class="demo"><img src="assets/demo.gif" alt="Sotto removing noise: input waveform vs cleaned output" /></div>
+  <p class="note">Input (noisy) on top, Sotto's output below — background noise suppressed, voice kept.</p>
+</header>
+
+<section class="alt">
+  <div class="wrap">
+    <div style="text-align:center"><span class="tag">Why Sotto</span></div>
+    <h2>The noise-cancelling mic macOS was missing</h2>
+    <p class="lead">Great open-source mic cleanup exists — on Linux. On macOS the options are paid and closed, or tools that make you hand-wire a virtual cable. Sotto just works.</p>
+    <div class="grid">
+      <div class="card"><h3>No setup, no cables</h3><p>Ships its own Core Audio driver. You never install BlackHole or route audio by hand.</p></div>
+      <div class="card"><h3>A strong model</h3><p>DeepFilterNet3 — noticeably better than the older RNNoise most open tools use.</p></div>
+      <div class="card"><h3>Truly local</h3><p>No account, no sign-in, no telemetry. Nothing leaves your Mac. Ever.</p></div>
+      <div class="card"><h3>Free &amp; open</h3><p>MIT-licensed. Use it, read it, fork it. No subscription, no paywall on noise removal.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>How it works</h2>
+    <p class="lead">Pick “Sotto Microphone” in your call app. Sotto captures your real mic, cleans each 10&nbsp;ms chunk on-device, and hands the clean audio to the app.</p>
+    <div class="flow">your mic → Sotto app (captures) → DeepFilterNet3 (removes noise) → “Sotto Microphone” → your call app</div>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>How good is it?</h2>
+    <p class="lead">Measured on a synthetic test set (6 noise types × 4 levels). Higher is better. Sotto's noise model matches Krisp; the live path is catching up.</p>
+    <table>
+      <tr><th>&nbsp;</th><th class="n">Noise removed</th><th class="n">Overall</th><th class="n">Speech (PESQ)</th></tr>
+      <tr><td>Unprocessed</td><td class="n">2.67</td><td class="n">2.44</td><td class="n">1.61</td></tr>
+      <tr><td>Sotto (live)</td><td class="n">3.58</td><td class="n">2.71</td><td class="n">2.12</td></tr>
+      <tr><td class="hl">Sotto (model)</td><td class="n hl">3.93</td><td class="n hl">3.09</td><td class="n hl">2.79</td></tr>
+      <tr><td>Krisp (standard)</td><td class="n">4.00</td><td class="n">3.08</td><td class="n">3.11</td></tr>
+    </table>
+    <p class="note">DNSMOS scores. Runs at ~4% of one CPU core. <a href="https://github.com/naga-pavan12/sotto/blob/main/bench/README.md">Full method →</a></p>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Install</h2>
+    <p class="lead">Developer preview — build from source on macOS 14+ (Apple Silicon). A one-click signed installer is on the way.</p>
+    <pre>git clone https://github.com/naga-pavan12/sotto.git
+cd sotto
+make            # build the denoiser, driver, and app
+make install    # install the audio driver (asks for your password)
+make app        # build Sotto.app
+open app/build/Sotto.app</pre>
+    <p class="note">Then choose “Sotto Microphone” in Zoom, Meet, Teams, Discord, or OBS.</p>
+  </div>
+</section>
+
+<section class="alt">
+  <div class="wrap">
+    <h2>What's next</h2>
+    <ul class="road">
+      <li><b>Signed installer + Homebrew</b> — one-click install, universal (Intel + Apple Silicon).</li>
+      <li><b>Live-quality parity</b> — tighter clock sync and buffering to match the model's offline quality in real time.</li>
+      <li><b>Only during calls</b> — process when an app is actually using the mic.</li>
+      <li><b>More</b> — clean incoming audio, background-voice isolation, Windows and Linux.</li>
+    </ul>
+  </div>
+</section>
+
+<footer>
+  <p>Sotto · MIT-licensed · built on <a href="https://github.com/Rikorose/DeepFilterNet">DeepFilterNet</a> and <a href="https://github.com/gavv/libASPL">libASPL</a></p>
+  <p style="margin-top:6px"><a href="https://github.com/naga-pavan12/sotto">github.com/naga-pavan12/sotto</a> · Independent project, not affiliated with any commercial vendor.</p>
+</footer>
+</body>
+</html>
