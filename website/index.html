@@ -88,6 +88,22 @@
   ul.road li{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:14px 18px;font-size:15px;color:var(--muted)}
   ul.road li b{color:var(--text)}
   @media (max-width:640px){.nav-links a:not(.ghbtn){display:none}.hero{padding:60px 0 30px}}
+  /* interactive demo */
+  .try-tabs{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:18px}
+  .try-tabs button{padding:8px 16px;border:1px solid var(--border);background:var(--card);color:var(--muted);border-radius:999px;font-size:14px;font-weight:550;cursor:pointer}
+  .try-tabs button.on{background:var(--teal);color:#06231d;border-color:var(--teal)}
+  .player{max-width:720px;margin:0 auto;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+  .player canvas{width:100%;height:120px;display:block;background:var(--bg-2);border-radius:10px}
+  .player .ctrls{display:flex;align-items:center;gap:18px;justify-content:center;margin-top:18px;flex-wrap:wrap}
+  .playbtn{display:inline-flex;align-items:center;gap:9px;padding:12px 24px;border-radius:12px;background:var(--teal);color:#06231d;font-weight:650;font-size:16px;border:none;cursor:pointer}
+  .playbtn:hover{background:#2ccfac}
+  .toggle-row{display:inline-flex;align-items:center;gap:11px;font-size:15px;color:var(--muted);user-select:none}
+  .sw{width:46px;height:26px;border-radius:999px;background:#2a3a36;position:relative;cursor:pointer;transition:.18s;flex:none}
+  .sw.on{background:var(--teal)}
+  .sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.18s}
+  .sw.on::after{transform:translateX(20px)}
+  .sw-label b{color:var(--text)}
+  .try-hint{text-align:center;color:var(--faint);font-size:13px;margin-top:14px}
   footer{padding:46px 0;text-align:center;color:var(--faint);font-size:14px;border-top:1px solid var(--border)}
   footer a{color:var(--muted)}footer a:hover{color:var(--teal)}
   .foot-brand{display:inline-flex;align-items:center;gap:9px;font-weight:600;color:var(--text);font-size:16px;margin-bottom:12px}
@@ -98,7 +114,7 @@
 <nav><div class="nav-in">
   <span class="brand"><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="3" y="3" width="94" height="94" rx="24" fill="var(--teal)"/><path d="M 20.0 50.0 L 20.5 53.98 L 21.0 57.8 L 21.5 61.36 L 22.0 64.56 L 22.5 67.32 L 23.0 69.55 L 23.5 71.22 L 24.0 72.28 L 24.5 72.7 L 25.0 72.48 L 25.5 71.63 L 26.0 70.2 L 26.5 68.21 L 27.0 65.75 L 27.5 62.87 L 28.0 59.68 L 28.5 56.25 L 29.0 52.69 L 29.5 49.11 L 30.0 45.59 L 30.5 42.25 L 31.0 39.16 L 31.5 36.42 L 32.0 34.1 L 32.5 32.25 L 33.0 30.92 L 33.5 30.14 L 34.0 29.92 L 34.5 30.27 L 35.0 31.17 L 35.5 32.58 L 36.0 34.45 L 36.5 36.73 L 37.0 39.35 L 37.5 42.23 L 38.0 45.28 L 38.5 48.43 L 39.0 51.56 L 39.5 54.61 L 40.0 57.48 L 40.5 60.1 L 41.0 62.4 L 41.5 64.32 L 42.0 65.81 L 42.5 66.83 L 43.0 67.37 L 43.5 67.42 L 44.0 66.97 L 44.5 66.07 L 45.0 64.72 L 45.5 62.99 L 46.0 60.93 L 46.5 58.59 L 47.0 56.05 L 47.5 53.39 L 48.0 50.68 L 48.5 47.99 L 49.0 45.41 L 49.5 43.0 L 50.0 40.83 L 50.5 38.95 L 51.0 37.42 L 51.5 36.26 L 52.0 35.51 L 52.5 35.18 L 53.0 35.27 L 53.5 35.77 L 54.0 36.65 L 54.5 37.89 L 55.0 39.45 L 55.5 41.27 L 56.0 43.29 L 56.5 45.47 L 57.0 47.73 L 57.5 50.0 L 58.0 52.23 L 58.5 54.35 L 59.0 56.3 L 59.5 58.04 L 60.0 59.51 L 60.5 60.69 L 61.0 61.54 L 61.5 62.05 L 62.0 62.22 L 62.5 62.03 L 63.0 61.52 L 63.5 60.7 L 64.0 59.59 L 64.5 58.25 L 65.0 56.7 L 65.5 55.01 L 66.0 53.21 L 66.5 51.38 L 67.0 49.55 L 67.5 47.78 L 68.0 46.11 L 68.5 44.6 L 69.0 43.28 L 69.5 42.19 L 70.0 41.34 L 70.5 40.76 L 71.0 40.45 L 71.5 40.42 L 72.0 40.66 L 72.5 41.16 L 73.0 41.88 L 73.5 42.82 L 74.0 43.92 L 74.5 45.16 L 75.0 46.5 L 75.5 47.9 L 76.0 49.3 L 76.5 50.68 L 77.0 52.0 L 77.5 53.21 L 78.0 54.29 L 78.5 55.22 L 79.0 55.96 L 79.5 56.5 L 80.0 56.85" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg> Sotto</span>
   <span class="nav-links">
-    <a href="#why">Why</a><a href="#how">How</a><a href="#benchmark">Benchmark</a><a href="#install">Install</a>
+    <a href="#try">Try it</a><a href="#why">Why</a><a href="#how">How</a><a href="#benchmark">Benchmark</a><a href="#install">Install</a>
     <a class="ghbtn" href="https://github.com/naga-pavan12/sotto">GitHub ★</a>
   </span>
 </div></nav>
@@ -124,6 +140,26 @@
     <p class="cap">Top: your mic with background noise. Bottom: Sotto's output — noise suppressed, voice kept.</p>
   </div>
 </header>
+
+<section id="try"><div class="wrap">
+  <span class="eyebrow">Try it</span>
+  <h2>Hear it yourself</h2>
+  <p class="lead">Real recordings. Press play, then flip the Sotto switch on and off to hear the noise disappear and come back &mdash; live, in sync.</p>
+  <div class="try-tabs" id="tryTabs">
+    <button data-clip="fan" class="on">Fan</button>
+    <button data-clip="traffic">Traffic</button>
+    <button data-clip="keyboard">Keyboard</button>
+    <button data-clip="babble">Background voices</button>
+  </div>
+  <div class="player">
+    <canvas id="viz" width="1200" height="240" aria-hidden="true"></canvas>
+    <div class="ctrls">
+      <button class="playbtn" id="playBtn"><span id="playIcon">&#9654;</span> <span id="playTxt">Play</span></button>
+      <span class="toggle-row"><span class="sw-label">Sotto <b id="swState">on</b></span><span class="sw on" id="sw" role="switch" aria-checked="true" tabindex="0"></span></span>
+    </div>
+    <p class="try-hint" id="tryHint">Tip: toggle Sotto while it plays &mdash; that&rsquo;s the whole pitch.</p>
+  </div>
+</div></section>
 
 <section id="why"><div class="wrap">
   <span class="eyebrow">Why Sotto</span>
@@ -188,5 +224,64 @@ open app/build/Sotto.app</pre>
   <p>MIT-licensed &middot; built on <a href="https://github.com/Rikorose/DeepFilterNet">DeepFilterNet</a> and <a href="https://github.com/gavv/libASPL">libASPL</a></p>
   <p style="margin-top:8px"><a href="https://github.com/naga-pavan12/sotto">github.com/naga-pavan12/sotto</a> &middot; Independent project, not affiliated with any commercial vendor.</p>
 </div></footer>
+<script>
+(function(){
+  var clips=["fan","traffic","keyboard","babble"], clip="fan";
+  var ctx, buffers={}, src={}, gain={}, master, analyser, raf, playing=false, sotto=true;
+  var playBtn=document.getElementById("playBtn"), playIcon=document.getElementById("playIcon"),
+      playTxt=document.getElementById("playTxt"), sw=document.getElementById("sw"),
+      swState=document.getElementById("swState"), canvas=document.getElementById("viz"),
+      g=canvas.getContext("2d"), tabs=document.getElementById("tryTabs"), hint=document.getElementById("tryHint");
+
+  function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
+  async function load(name){
+    if(buffers[name]) return buffers[name];
+    var urls={noisy:"assets/demo/"+name+"_noisy.m4a", sotto:"assets/demo/"+name+"_sotto.m4a"};
+    var both=await Promise.all([fetch(urls.noisy).then(r=>r.arrayBuffer()), fetch(urls.sotto).then(r=>r.arrayBuffer())]);
+    var dec=await Promise.all(both.map(b=>ctx.decodeAudioData(b)));
+    buffers[name]={noisy:dec[0], sotto:dec[1]}; return buffers[name];
+  }
+  function stop(){ try{src.noisy&&src.noisy.stop();src.sotto&&src.sotto.stop();}catch(e){} src={}; }
+  async function start(){
+    if(!ctx){ ctx=new (window.AudioContext||window.webkitAudioContext)();
+      master=ctx.createGain(); analyser=ctx.createAnalyser(); analyser.fftSize=256;
+      master.connect(analyser); analyser.connect(ctx.destination);
+      gain.noisy=ctx.createGain(); gain.sotto=ctx.createGain(); gain.noisy.connect(master); gain.sotto.connect(master);
+    }
+    if(ctx.state==="suspended") await ctx.resume();
+    var buf=await load(clip); stop();
+    ["noisy","sotto"].forEach(function(k){
+      var s=ctx.createBufferSource(); s.buffer=buf[k]; s.loop=true; s.connect(gain[k]); src[k]=s;
+    });
+    applyGains(0);
+    var t=ctx.currentTime+0.02; src.noisy.start(t); src.sotto.start(t);
+    playing=true; setPlayUI(); draw();
+  }
+  function applyGains(tc){
+    if(!gain.noisy) return;
+    gain.noisy.gain.setTargetAtTime(sotto?0:1, ctx.currentTime, tc||0.06);
+    gain.sotto.gain.setTargetAtTime(sotto?1:0, ctx.currentTime, tc||0.06);
+  }
+  function setPlayUI(){ playIcon.innerHTML=playing?"&#10073;&#10073;":"&#9654;"; playTxt.textContent=playing?"Pause":"Play"; }
+  function setSottoUI(){ sw.classList.toggle("on",sotto); sw.setAttribute("aria-checked",sotto); swState.textContent=sotto?"on":"off"; }
+  function draw(){
+    raf=requestAnimationFrame(draw);
+    var n=analyser.frequencyBinCount, data=new Uint8Array(n); analyser.getByteFrequencyData(data);
+    var W=canvas.width,H=canvas.height; g.clearRect(0,0,W,H);
+    var bars=48, step=Math.floor(n/bars), bw=W/bars, col=sotto?css("--teal"):"#6b807a";
+    g.fillStyle=col;
+    for(var i=0;i<bars;i++){ var v=data[i*step]/255, h=Math.max(4,v*H*0.9), x=i*bw;
+      var y=(H-h)/2; g.beginPath(); g.roundRect?g.roundRect(x+bw*0.2,y,bw*0.6,h,bw*0.3):g.rect(x+bw*0.2,y,bw*0.6,h); g.fill(); }
+  }
+  playBtn.onclick=function(){ if(playing){ playing=false; stop(); cancelAnimationFrame(raf); setPlayUI(); g.clearRect(0,0,canvas.width,canvas.height);} else start(); };
+  function toggleSotto(){ sotto=!sotto; setSottoUI(); if(playing) applyGains(); }
+  sw.onclick=toggleSotto;
+  sw.onkeydown=function(e){ if(e.key===" "||e.key==="Enter"){e.preventDefault();toggleSotto();} };
+  tabs.onclick=function(e){ var b=e.target.closest("button"); if(!b)return;
+    [].forEach.call(tabs.children,function(c){c.classList.remove("on");}); b.classList.add("on");
+    clip=b.dataset.clip; if(playing) start(); };
+})();
+</script>
+
 </body>
 </html>
