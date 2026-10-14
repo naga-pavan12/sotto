@@ -9,7 +9,7 @@ import Observation
 @Observable
 final class AppModel {
     var enabled = true { didSet { reconcile() } }
-    var strength = 80 { didSet { engine?.strength = strength; persist() } }
+    var strength = 90 { didSet { engine?.strength = strength; persist() } }
     var selectedMicUID: String = ""
     var statusLine = "Idle"
     var inputs: [MicDevice] = []
@@ -19,7 +19,7 @@ final class AppModel {
     private var running = false
 
     init() {
-        strength = UserDefaults.standard.object(forKey: "strength") as? Int ?? 80
+        strength = UserDefaults.standard.object(forKey: "strength") as? Int ?? 90
         enabled = UserDefaults.standard.object(forKey: "enabled") as? Bool ?? true
         inputs = monitor.physicalInputs
         selectedMicUID = UserDefaults.standard.string(forKey: "selectedMicUID")

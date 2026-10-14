@@ -43,7 +43,7 @@ public final class AudioEngine {
     private var micChannels = 1
     private var micRate = 48000.0
 
-    public var strength: Int = 80 { didSet { chain.requestStrength(strength) } }
+    public var strength: Int = 90 { didSet { chain.requestStrength(strength) } }
     public var bypass: Bool = false { didSet { chain.setBypass(bypass) } }
 
     public init?() {

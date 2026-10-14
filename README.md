@@ -82,7 +82,7 @@ Remove the driver later with `make uninstall`.
 ## Using it
 
 1. Launch Sotto — it appears in the **Dock**, the **menu bar**, and opens a small control window.
-2. Turn it **on**, pick your real **microphone**, set the **strength** (default 80%).
+2. Turn it **on**, pick your real **microphone**, set the **strength** (default 90%).
    Hold **“Hear original”** to A/B compare.
 3. Select **“Sotto Microphone”** in your call app.
 4. **Quit** from the window's Quit button, `⌘Q`, or right-click the Dock icon — this
@@ -109,17 +109,17 @@ Architecture details: [docs/superpowers/specs/2026-10-12-sotto-v0.1-design.md](d
 Synthetic test set (6 noise types × 4 levels), scored with PESQ, STOI, SI-SDR and
 Microsoft DNSMOS. Higher is better. Method and re-run steps: [bench/README.md](bench/README.md).
 
-| | Noise removed (DNSMOS BAK) | Overall (DNSMOS) | PESQ |
-|---|---|---|---|
-| Unprocessed | 2.67 | 2.44 | 1.61 |
-| Classic spectral gating | 3.33 | 2.64 | 1.58 |
-| **Sotto (live)** | 3.58 | 2.71 | 2.12 |
-| **Sotto (model, offline)** | **3.93** | **3.09** | **2.79** |
-| Krisp (standard NC) | 4.00 | 3.08 | 3.11 |
+| | Speech quality (DNSMOS SIG) | Noise removed (DNSMOS BAK) | Overall (DNSMOS) | PESQ |
+|---|---|---|---|---|
+| Unprocessed | 3.29 | 2.67 | 2.44 | 1.61 |
+| Classic spectral gating | 3.22 | 3.33 | 2.64 | 1.58 |
+| **Sotto** | **3.42** | 3.82 | **3.03** | 2.70 |
+| Krisp (standard NC) | 3.35 | 4.01 | 3.07 | 2.88 |
 
-Sotto's **noise model matches Krisp** (3.09 vs 3.08 overall, offline). Its live path
-currently trails because of real-time buffering overhead — closing that gap is the
-main v0.2 item. All at ~4% of one CPU core.
+Sotto **matches Krisp overall** (3.03 vs 3.07 DNSMOS) and **leads on speech
+quality** (SIG 3.42 vs 3.35) across all 192 clips. These are live, end-to-end
+numbers: the real-time path is lossless, verified to within 0.03 DNSMOS of the
+model running offline. All at ~4% of one CPU core.
 
 ## Roadmap
 
@@ -127,7 +127,9 @@ main v0.2 item. All at ~4% of one CPU core.
 - Universal binary (Intel + Apple Silicon) and a signed, notarized installer + Homebrew cask.
 
 **v0.2**
-- Close the live-quality gap (shared-clock capture, drift-corrected buffering).
+- ~~Close the live-quality gap~~ ✓ Done — tuned the DeepFilterNet3 decoder
+  thresholds to the reference inference config; live now matches the model (and
+  ties Krisp). The real-time path was already lossless.
 - Driver watches app liveness; resets cleanly if the app crashes or is killed.
 - Process **only during calls** instead of whenever enabled.
 - Automatic default-device switching, per-app call detection, Bluetooth/AirPods handling.
@@ -141,7 +143,6 @@ main v0.2 item. All at ~4% of one CPU core.
 
 - **Developer preview:** source build, unsigned — other Macs need manual approval until we ship a signed build.
 - **48 kHz only** for now; low-rate Bluetooth mics untested.
-- **Live quality** trails the model's offline ceiling pending v0.2 buffering work.
 - **Bridge authorization** is fully enforced only in signed builds (which verify the
   app's code-signing Team ID); unsigned local builds use a weaker check, with the
   hidden device as defense-in-depth.

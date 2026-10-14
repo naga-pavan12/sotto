@@ -24,7 +24,12 @@ pub struct SottoDenoiser {
 pub extern "C" fn sotto_denoiser_new() -> *mut SottoDenoiser {
     let built = catch_unwind(|| {
         let params = DfParams::default();
-        let rp = RuntimeParams::default_with_ch(1);
+        // Use DeepFilterNet's recommended inference thresholds (the deep-filter CLI
+        // defaults) rather than the library's conservative default_with_ch values
+        // (-10/30/20). The wider DF/ERB local-SNR range runs the deep-filter decoder
+        // on more frames, matching the reference offline quality. min_db_thresh -15,
+        // max_db_erb_thresh 35, max_db_df_thresh 35.
+        let rp = RuntimeParams::default_with_ch(1).with_thresholds(-15.0, 35.0, 35.0);
         let model = DfTract::new(params, &rp).ok()?;
         let hop = model.hop_size;
         let pristine = model.clone();

@@ -7,7 +7,7 @@ description = "C-ABI noise-cancellation library wrapping DeepFilterNet3"
 
 [lib]
 name = "sotto_denoiser"
-crate-type = ["staticlib", "rlib"]
+crate-type = ["staticlib", "rlib", "cdylib"]
 
 [dependencies]
 deep_filter = { git = "https://github.com/Rikorose/DeepFilterNet", tag = "v0.5.6", default-features = false, features = ["tract", "default-model"] }

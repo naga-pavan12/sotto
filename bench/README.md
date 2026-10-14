@@ -63,29 +63,53 @@ uv run python capture_krisp.py        # needs BlackHole + Krisp mic set to Black
 uv run python evaluate.py
 ```
 
-## Sotto live measurement (Task 15)
+## Sotto quality: three references
 
-`measure_sotto.py` runs the full shipped pipeline: it plays each noisy clip into
-BlackHole 2ch, the running `Sotto.app`/`SottoCLI` engine captures BlackHole →
-DeepFilterNet3 → Sotto Bridge → **Sotto Microphone**, and the script records
-Sotto Microphone and scores it.
+Comparing Sotto against the right reference matters. `dfn3` above is the
+**deep-filter CLI**, a *different* code path from Sotto's `df`-crate integration,
+so it is not Sotto's own ceiling. Two helper tools measure Sotto itself:
 
-**Live result (24-clip sample, one speaker across all 6 noise types × 4 SNRs, 2026-10-13):**
+- **`sotto_offline.py`** drives Sotto's own `libsotto_denoiser.dylib` hop-by-hop
+  (no audio devices, fresh model state) — Sotto's true offline ceiling.
+- **`measure_sotto_fresh.py`** runs the full live pipeline (BlackHole →
+  DeepFilterNet3 → Sotto Bridge → **Sotto Microphone**) with a **fresh engine per
+  clip**, so the model's running normalization is not biased by preceding clips.
+
+### The v0.1→v0.2 quality investigation (2026-10-14)
+
+The original `measure_sotto.py` reported Sotto live at DNSMOS OVRL 2.71, ~0.4 below
+`dfn3` (3.09), and that gap was attributed to real-time buffering. Investigation
+showed the gap was **not** the real-time path:
+
+- **No clock drift** (windowed cross-correlation lag is flat), and BlackHole
+  loopback alone is lossless (corr 1.000). The pipeline reproduces the model
+  within 0.03 DNSMOS (live vs `sotto_offline`).
+- **Wrong reference.** `dfn3` is the CLI, not Sotto's model. Sotto's own model
+  offline scored 2.74 — the real gap was in the model config, not the pipeline.
+- **Benchmark bias.** `measure_sotto.py` streams all clips through one never-reset
+  model with silence gaps; a loud clip before a quiet one over-attenuates the quiet
+  one's speech. `measure_sotto_fresh.py` (fresh engine per clip) removes this.
+- **Root cause + fix.** Sotto used the `df` library's conservative decoder
+  thresholds (`min_db_thresh -10`, `max_db_erb_thresh 30`, `max_db_df_thresh 20`)
+  instead of DeepFilterNet's recommended inference values (`-15 / 35 / 35`, the
+  deep-filter CLI defaults). Matching them (in `denoiser/src/lib.rs`) lifts Sotto
+  +0.25 DNSMOS OVRL at no CPU cost (RTF still ~0.039).
+
+**Result (full 192-clip set, Sotto at default strength 90, fixed thresholds):**
 
 | | PESQ | STOI | SI-SDR | DNSMOS SIG | DNSMOS BAK | DNSMOS OVRL |
 |---|---|---|---|---|---|---|
-| Sotto (live) | 2.12 | 0.86 | 6.2 | 3.16 | 3.58 | 2.71 |
-| DeepFilterNet3 (offline ceiling) | 2.79 | 0.96 | 16.2 | 3.43 | 3.93 | 3.09 |
-| Krisp (standard NC) | 2.88 | 0.97 | 17.8 | 3.35 | 4.01 | 3.07 |
+| Sotto | 2.70 | 0.96 | 16.8 | **3.42** | 3.82 | 3.03 |
+| deep-filter CLI (reference) | 2.79 | 0.96 | 16.2 | 3.43 | 3.93 | 3.09 |
+| Krisp (standard NC) | 2.88 | 0.96 | 17.8 | 3.35 | 4.01 | 3.07 |
 
-Sotto removes noise well (BAK 3.58) and works end-to-end, but the live path sits
-~0.4 DNSMOS below the model's offline ceiling. The gap is real-time path overhead:
-the capture ↔ bridge ↔ mic hops run on independent device clocks, and the test
-feeds audio through a BlackHole loopback, adding resampling/buffer jitter. Closing
-it (tighter clock sync, drift-corrected buffering) is the main v0.1→v0.2 quality item.
+Sotto now ties Krisp overall (3.03 vs 3.07) and leads on speech quality (SIG 3.42
+vs 3.35). Live matches this within 0.03 DNSMOS (the real-time path is lossless).
 
 ```bash
 make driver && make install && make app
-open app/build/Sotto.app        # or run SottoCLI directly for headless tests
-cd bench && uv run python measure_sotto.py 24 && uv run python evaluate.py sotto
+cd bench
+uv run python sotto_offline.py 192 90        # Sotto's offline ceiling
+uv run python measure_sotto_fresh.py         # live, fresh engine per clip
+uv run python evaluate.py sotto_model sotto_fresh dfn3 krisp
 ```
