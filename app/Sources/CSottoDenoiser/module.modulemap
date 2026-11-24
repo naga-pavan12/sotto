@@ -1,5 +1,4 @@
 module CSottoDenoiser {
     header "sotto_denoiser.h"
-    link "sotto_denoiser"
     export *
 }

@@ -81,12 +81,14 @@ Remove the driver later with `make uninstall`.
 
 ## Using it
 
-1. Launch Sotto — it appears in the **Dock**, the **menu bar**, and opens a small control window.
-2. Turn it **on**, pick your real **microphone**, set the **strength** (default 90%).
-   Hold **“Hear original”** to A/B compare.
-3. Select **“Sotto Microphone”** in your call app.
-4. **Quit** from the window's Quit button, `⌘Q`, or right-click the Dock icon — this
-   releases your mic cleanly.
+1. Launch Sotto and click its **menu bar** icon to choose your physical microphone.
+2. Select **Sotto Microphone** in your call or recording app. Sotto starts capturing
+   when an app uses that input and releases your physical mic when the last app stops.
+   The menu shows which apps are using a microphone and the input each app is using
+   when macOS provides it. A meeting using a physical mic directly receives its original audio.
+3. Use the **Noise cancellation** switch to choose between cleaned audio and your
+   original microphone audio. Adjust **Strength** or hold **Hear original** to compare.
+4. To exit Sotto, click **Quit** in the menu bar panel.
 
 ## How it works
 
@@ -131,7 +133,6 @@ model running offline. All at ~4% of one CPU core.
   thresholds to the reference inference config; live now matches the model (and
   ties Krisp). The real-time path was already lossless.
 - Driver watches app liveness; resets cleanly if the app crashes or is killed.
-- Process **only during calls** instead of whenever enabled.
 - Automatic default-device switching, per-app call detection, Bluetooth/AirPods handling.
 
 **Later**

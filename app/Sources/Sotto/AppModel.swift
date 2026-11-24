@@ -1,106 +1,137 @@
 import Foundation
-import CoreAudio
-import SottoCore
 import Observation
+import SottoCore
 
-/// Drives the engine from UI state and surfaces status. Starts processing only
-/// while some app is reading Sotto Microphone (the driver's 'sRun' property).
+protocol CaptureEngine: AnyObject {
+    var strength: Int { get set }
+    var bypass: Bool { get set }
+    func start(micUID: String) throws
+    func stop()
+}
+
+extension AudioEngine: CaptureEngine {}
+
 @MainActor
 @Observable
 final class AppModel {
-    var enabled = true { didSet { reconcile() } }
-    var strength = 90 { didSet { engine?.strength = strength; persist() } }
-    var selectedMicUID: String = ""
-    var statusLine = "Idle"
-    var inputs: [MicDevice] = []
-
-    private var engine: AudioEngine?
-    private let monitor = DeviceMonitor(system: CoreAudioSystem())
-    private var running = false
-
-    init() {
-        strength = UserDefaults.standard.object(forKey: "strength") as? Int ?? 90
-        enabled = UserDefaults.standard.object(forKey: "enabled") as? Bool ?? true
-        inputs = monitor.physicalInputs
-        selectedMicUID = UserDefaults.standard.string(forKey: "selectedMicUID")
-            ?? monitor.physicalInputs.first?.uid ?? ""
-        monitor.select(uid: selectedMicUID)
-        monitor.onNeedRebuild = { [weak self] dev in
-            guard let self else { return }
-            self.selectedMicUID = dev.uid
-            self.inputs = self.monitor.physicalInputs
-            if self.running { self.restart() }
+    var enabled: Bool {
+        didSet {
+            defaults.set(enabled, forKey: "enabled")
+            if !enabled { comparing = false }
+            updateBypass()
         }
-        setMicHidden(false)
+    }
+    var strength: Int {
+        didSet {
+            defaults.set(strength, forKey: "strength")
+            engine?.strength = strength
+        }
+    }
+
+    private(set) var selectedMicUID: String
+    private(set) var inputs: [MicDevice]
+    private var engine: CaptureEngine?
+    private(set) var microphoneUses: [String] = []
+    private var startError: String?
+    private var comparing = false
+    private let system: AudioSystem
+    private let monitor: DeviceMonitor
+    private let defaults: UserDefaults
+    private let makeEngine: () -> CaptureEngine?
+
+    var isCapturing: Bool { engine != nil }
+
+    var statusLine: String {
+        if let startError { return startError }
+        guard !selectedMicUID.isEmpty else { return "No microphone available for Sotto" }
+        guard isCapturing else { return "Sotto Microphone is idle" }
+        return enabled && !comparing ? "Sotto Microphone · cleaning audio" : "Sotto Microphone · original audio"
+    }
+
+    init(system: AudioSystem = CoreAudioSystem(), defaults: UserDefaults = .standard,
+         makeEngine: @escaping () -> CaptureEngine? = { AudioEngine() }) {
+        self.system = system
+        self.defaults = defaults
+        self.makeEngine = makeEngine
+        let monitor = DeviceMonitor(system: system)
+        self.monitor = monitor
+        if let saved = defaults.string(forKey: "selectedMicUID") { monitor.select(uid: saved) }
+        selectedMicUID = monitor.selectedUID ?? ""
+        inputs = monitor.physicalInputs
+        strength = defaults.object(forKey: "strength") as? Int ?? 90
+        enabled = defaults.object(forKey: "enabled") as? Bool ?? true
+        monitor.onChange = { [weak self] change in
+            guard let self else { return }
+            if change == .serviceRestarted { self.stop() }
+            if change != .microphoneActivity {
+                self.inputs = self.monitor.physicalInputs
+                self.startError = nil
+            }
+            self.reconcile()
+            self.refreshMicrophoneUses()
+        }
         reconcile()
+        refreshMicrophoneUses()
     }
 
     func selectMic(_ uid: String) {
-        selectedMicUID = uid
         monitor.select(uid: uid)
-        UserDefaults.standard.set(uid, forKey: "selectedMicUID")
-        if running { restart() }
+        defaults.set(monitor.selectedUID, forKey: "selectedMicUID")
+        reconcile()
     }
 
-    private func persist() {
-        UserDefaults.standard.set(strength, forKey: "strength")
-        UserDefaults.standard.set(enabled, forKey: "enabled")
+    func compareOriginal(_ pressed: Bool) {
+        comparing = enabled && pressed
+        updateBypass()
+    }
+
+    private func updateBypass() { engine?.bypass = !enabled || comparing }
+
+    private func refreshMicrophoneUses() {
+        let uses = system.activeMicrophoneUses().map { use in
+            switch use {
+            case let .app(app, microphone?): "\(app) is using \(microphone)"
+            case let .app(app, nil): "\(app) is using a microphone"
+            case let .device(name, hasOutput: true): "\(name) is active (input or output)"
+            case let .device(name, hasOutput: false): "\(name) is in use"
+            }
+        }
+        microphoneUses = Set(uses).sorted()
     }
 
     private func reconcile() {
-        persist()
-        guard !selectedMicUID.isEmpty else { stop(); return }
-        start()                          // keep the engine running whenever a mic is chosen
-        engine?.bypass = !enabled        // off => pass the raw mic through, never silence
-        statusLine = running
-            ? (enabled ? "Active · cleaning \(micName(selectedMicUID))"
-                       : "Off · passing through \(micName(selectedMicUID))")
-            : statusLine
-    }
-
-    private func start() {
-        guard !running else { return }
-        guard let e = AudioEngine() else { statusLine = "Denoiser failed to load"; return }
-        e.strength = strength
+        let uid = monitor.selectedUID ?? ""
+        if selectedMicUID != uid {
+            stop()
+            selectedMicUID = uid
+        }
+        guard !uid.isEmpty, system.isSottoMicrophoneInUse else {
+            stop()
+            return
+        }
+        guard engine == nil, startError == nil else { return }
+        guard let candidate = makeEngine() else { startError = "Denoiser failed to load"; return }
+        candidate.strength = strength
+        candidate.bypass = !enabled || comparing
         do {
-            try e.start(micUID: selectedMicUID)
-            engine = e
-            running = true
-            statusLine = "Active · cleaning \(micName(selectedMicUID))"
+            try candidate.start(micUID: uid)
+            engine = candidate
+            startError = nil
         } catch {
-            statusLine = "Start failed: \(error)"
+            candidate.stop()
+            startError = "Start failed: \(error)"
         }
     }
 
     private func stop() {
         engine?.stop()
         engine = nil
-        running = false
-        statusLine = "Off"
+        startError = nil
     }
 
-    private func restart() { stop(); start() }
-
-    func setBypass(_ on: Bool) { engine?.bypass = on }
-
-    private func micName(_ uid: String) -> String {
-        inputs.first(where: { $0.uid == uid })?.name ?? uid
+    func willQuit() {
+        monitor.onChange = nil
+        stop()
+        system.setSottoMicrophoneHidden(true)
     }
-
-    // Toggle the driver's mic-hidden custom property ('sHid').
-    private func setMicHidden(_ hidden: Bool) {
-        guard let dev = AudioEngine.deviceID(uid: "SottoMicrophone") else { return }
-        var addr = AudioObjectPropertyAddress(
-            mSelector: AudioObjectPropertySelector(UInt32(bigEndian: 0x73486964)), // 'sHid'
-            mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-        var value = hidden ? 1 : 0
-        let cf = CFNumberCreate(nil, .intType, &value)
-        var plist: CFPropertyList? = cf
-        withUnsafeMutablePointer(to: &plist) { p in
-            _ = AudioObjectSetPropertyData(dev, &addr, 0, nil,
-                UInt32(MemoryLayout<CFPropertyList?>.size), p)
-        }
-    }
-
-    func willQuit() { stop(); setMicHidden(true) }
 }
