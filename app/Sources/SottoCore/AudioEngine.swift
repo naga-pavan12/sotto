@@ -84,8 +84,8 @@ public final class AudioEngine {
 
         try installMicProc()
         try installBridgeProc()
-        AudioDeviceStart(bridgeID, bridgeProc)
-        AudioDeviceStart(micID, micProc)
+        guard AudioDeviceStart(bridgeID, bridgeProc) == noErr,
+              AudioDeviceStart(micID, micProc) == noErr else { throw EngineError.ioProcFailed }
     }
 
     public func stop() {

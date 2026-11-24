@@ -1,22 +1,24 @@
 import SwiftUI
 import AppKit
 
+@MainActor
+private final class AppDelegate: NSObject, NSApplicationDelegate {
+    let model = AppModel()
+
+    func applicationWillFinishLaunching(_ notification: Notification) {
+        NSApplication.shared.setActivationPolicy(.accessory)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) { model.willQuit() }
+}
+
 @main
 struct SottoApp: App {
-    @State private var model = AppModel()
+    @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
 
     var body: some Scene {
-        Window("Sotto", id: "main") {
-            MenuView(model: model)
-                .frame(width: 300)
-                .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-                    model.willQuit()
-                }
-        }
-        .windowResizability(.contentSize)
-
         MenuBarExtra {
-            MenuView(model: model)
+            MenuView(model: delegate.model)
         } label: {
             Image(nsImage: Self.menuBarIcon)
         }

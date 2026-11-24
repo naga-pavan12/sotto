@@ -43,7 +43,7 @@ struct MenuView: View {
                 Text("Noise cancellation").font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
-            Toggle("", isOn: $model.enabled).labelsHidden().toggleStyle(.switch).tint(sottoTeal)
+            Toggle("Noise cancellation", isOn: $model.enabled).labelsHidden().toggleStyle(.switch).tint(sottoTeal)
         }
     }
 
@@ -54,7 +54,6 @@ struct MenuView: View {
                 ForEach(model.inputs, id: \.uid) { Text($0.name).tag($0.uid) }
             }
             .labelsHidden()
-            .disabled(!model.enabled)
         }
     }
 
@@ -78,22 +77,32 @@ struct MenuView: View {
             .padding(.vertical, 7)
             .background(RoundedRectangle(cornerRadius: 8).stroke(Color.secondary.opacity(0.3)))
             .contentShape(Rectangle())
-            .onLongPressGesture(minimumDuration: 0.01, pressing: { model.setBypass($0) }, perform: {})
+            .onLongPressGesture(minimumDuration: 0.01, pressing: { model.compareOriginal($0) }, perform: {})
+            .disabled(!model.enabled)
+            .onDisappear { model.compareOriginal(false) }
             .opacity(model.enabled ? 1 : 0.4)
     }
 
     private var statusRow: some View {
-        HStack(spacing: 7) {
-            Circle().fill(model.enabled ? sottoTeal : Color.secondary).frame(width: 7, height: 7)
-            Text(model.statusLine).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 7) {
+                Circle().fill(model.isCapturing ? sottoTeal : Color.secondary).frame(width: 7, height: 7)
+                Text(model.statusLine).font(.caption)
+            }
+            ForEach(model.microphoneUses, id: \.self) { use in
+                Text(use).font(.caption).foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 
     private var footer: some View {
         HStack {
-            Text("Pick “Sotto Microphone” in your call app").font(.system(size: 10)).foregroundStyle(.tertiary)
+            if !model.isCapturing {
+                Text("Pick “Sotto Microphone” in your call app").font(.system(size: 10)).foregroundStyle(.tertiary)
+            }
             Spacer()
-            Button("Quit") { model.willQuit(); NSApplication.shared.terminate(nil) }
+            Button("Quit") { NSApplication.shared.terminate(nil) }
                 .font(.system(size: 11))
         }
     }

@@ -1,5 +1,9 @@
 // swift-tools-version:6.0
 import PackageDescription
+import Foundation
+
+let denoiserArchive = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
+    .appendingPathComponent("../denoiser/target/release/libsotto_denoiser.a").standardizedFileURL.path
 
 let package = Package(
     name: "Sotto",
@@ -11,15 +15,14 @@ let package = Package(
         .target(
             name: "SottoCore",
             dependencies: ["SottoRT", "CSottoDenoiser"],
-            linkerSettings: [.unsafeFlags(["-L../denoiser/target/release"])]),
+            linkerSettings: [.unsafeFlags([denoiserArchive])]),
         .testTarget(name: "SottoCoreTests", dependencies: ["SottoCore", "SottoRT"]),
         .executableTarget(
             name: "SottoCLI",
-            dependencies: ["SottoCore"],
-            linkerSettings: [.unsafeFlags(["-L../denoiser/target/release"])]),
+            dependencies: ["SottoCore"]),
         .executableTarget(
             name: "Sotto",
-            dependencies: ["SottoCore"],
-            linkerSettings: [.unsafeFlags(["-L../denoiser/target/release"])]),
+            dependencies: ["SottoCore"]),
+        .testTarget(name: "SottoTests", dependencies: ["Sotto"]),
     ]
 )

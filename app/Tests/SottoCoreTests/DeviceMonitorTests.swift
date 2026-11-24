@@ -4,15 +4,18 @@ import Testing
 private final class FakeAudioSystem: AudioSystem {
     var devices: [MicDevice]
     var defaultInputUID: String
-    var listener: (() -> Void)?
+    var listener: ((AudioSystemChange) -> Void)?
+    var isSottoMicrophoneInUse = false
+    func activeMicrophoneUses() -> [MicrophoneUse] { [] }
+    func setSottoMicrophoneHidden(_ hidden: Bool) {}
     init(devices: [MicDevice], defaultInputUID: String) {
         self.devices = devices
         self.defaultInputUID = defaultInputUID
     }
     func inputDevices() -> [MicDevice] { devices }
     func defaultInputDeviceUID() -> String { defaultInputUID }
-    func onDevicesChanged(_ cb: @escaping () -> Void) { listener = cb }
-    func simulateChange() { listener?() }
+    func onChange(_ cb: @escaping (AudioSystemChange) -> Void) { listener = cb }
+    func simulateChange() { listener?(.devices) }
 }
 
 private let builtin = MicDevice(uid: "BuiltInMic", name: "MacBook Air Microphone")
@@ -29,12 +32,11 @@ private let sotto = MicDevice(uid: "SottoMicrophone", name: "Sotto Microphone")
     let sys = FakeAudioSystem(devices: [builtin, airpods, sotto], defaultInputUID: "BuiltInMic")
     let m = DeviceMonitor(system: sys)
     m.select(uid: "AirPods")
-    var rebuilt: [MicDevice] = []
-    m.onNeedRebuild = { rebuilt.append($0) }
+    var changes: [AudioSystemChange] = []
+    m.onChange = { changes.append($0) }
     // AirPods disconnect; default is the built-in mic.
     sys.devices = [builtin, sotto]
     sys.simulateChange()
-    #expect(rebuilt.count == 1)
-    #expect(rebuilt.first?.uid == "BuiltInMic")
+    #expect(changes == [.devices])
     #expect(m.selectedUID == "BuiltInMic")
 }
